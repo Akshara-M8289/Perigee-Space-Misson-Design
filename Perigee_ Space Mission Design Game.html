@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Perigee: Space Mission Design Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E4EBF1;--pane:#F6F9FB;--pane2:#EAF0F5;--ink:#10203B;--mute:#46587A;--line:#8FA6C3;--grid:#D2DEE9;
+  --acc:#C93F0B;--acc-ink:#FFFFFF;--ok:#0A6B5C;--warn:#8A5A00;--bad:#B0231B;
+  --okbg:#D5EEE7;--warnbg:#F7E6BC;--badbg:#F6D3CF;--focus:#1559D6;--wingSi:#2C4A82;--wingGa:#C98A12;--earth:#2D6CB3;--moon:#9AA3AE;--mars:#B4562F;--sunc:#E5A100;
+  --head:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08183F;--pane:#0E2759;--pane2:#12306D;--ink:#E9F0FF;--mute:#AEC0E6;--line:#4E70B8;--grid:#122F6A;
+  --acc:#FF8F52;--acc-ink:#08183F;--ok:#74E3C6;--warn:#F6C85B;--bad:#FF9A93;
+  --okbg:#0E4A52;--warnbg:#4A4116;--badbg:#5A2230;--focus:#8DB8FF;--wingSi:#5E86D6;--wingGa:#F0B83E;--earth:#4A8FDB;--moon:#B7BFCA;--mars:#D9764C;--sunc:#F6C85B;color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#08183F;--pane:#0E2759;--pane2:#12306D;--ink:#E9F0FF;--mute:#AEC0E6;--line:#4E70B8;--grid:#122F6A;
+  --acc:#FF8F52;--acc-ink:#08183F;--ok:#74E3C6;--warn:#F6C85B;--bad:#FF9A93;
+  --okbg:#0E4A52;--warnbg:#4A4116;--badbg:#5A2230;--focus:#8DB8FF;--wingSi:#5E86D6;--wingGa:#F0B83E;--earth:#4A8FDB;--moon:#B7BFCA;--mars:#D9764C;--sunc:#F6C85B;color-scheme:dark;}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--head);font-size:15px;line-height:1.5;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;background-position:-1px -1px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+h1,h2,h3{font-weight:800;font-stretch:122%;margin:0;line-height:1.1;letter-spacing:-.01em}
+h1{font-size:clamp(2.2rem,6vw,4rem)}h2{font-size:1.25rem}h3{font-size:1rem;font-stretch:112%}
+p{margin:0}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1280px;margin:0 auto;padding:14px clamp(12px,2.5vw,28px) 56px}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:6px 0 12px}
+.brand{font-weight:800;font-stretch:125%;font-size:1.25rem;letter-spacing:.01em}
+.brand small{display:block;font-weight:400;font-stretch:100%;font-size:.78rem;color:var(--mute);letter-spacing:0}
+.top nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--ink);background:var(--pane);padding:8px 14px;border-radius:3px;cursor:pointer;font-weight:600;min-height:40px}
+.btn:hover{background:var(--pane2)}
+.btn.pri{background:var(--acc);color:var(--acc-ink);border-color:var(--acc);font-weight:800;padding:11px 20px;font-stretch:112%}
+.btn.pri:hover{filter:brightness(1.07)}
+.btn.sm{padding:4px 10px;min-height:32px;font-size:.88rem}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.card{background:var(--pane);border:1px solid var(--line);border-radius:2px;padding:14px}
+.card.tight{padding:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.mute{color:var(--mute)}.small{font-size:.86rem}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:1px 9px;font-size:.82rem;background:var(--pane2)}
+.dot{width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-size:.72rem;font-weight:800;flex:none}
+/* lobby */
+.lobby{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:center;min-height:70vh}
+.lobby .hero{display:grid;gap:16px}
+.lobby .lede{font-size:1.1rem;max-width:56ch}
+.lobby .fig{border:1px solid var(--line);background:var(--pane);padding:6px}
+.setup{display:grid;gap:12px}
+.setup label{font-weight:700;display:block;margin-bottom:4px}
+.setup input[type=text]{width:100%;padding:9px 11px;border:1px solid var(--ink);border-radius:3px;background:var(--pane);min-height:42px}
+.modes{display:grid;gap:10px}
+.mode{display:grid;gap:2px;text-align:left;border:1px solid var(--ink);background:var(--pane);padding:12px 14px;border-radius:3px;cursor:pointer}
+.mode:hover{background:var(--pane2)}
+.mode b{font-stretch:112%;font-weight:800}
+.mode[disabled]{opacity:.55;cursor:not-allowed}
+.join{display:flex;gap:8px}.join input{text-transform:uppercase;font-family:var(--mono);letter-spacing:.2em;width:7.5em}
+/* work */
+.strip{display:flex;gap:10px 18px;flex-wrap:wrap;align-items:baseline;border-bottom:2px solid var(--ink);padding:0 0 8px;margin-bottom:12px}
+.strip h2{font-size:1.5rem}
+.strip .meta{color:var(--mute);font-size:.9rem}
+.strip .acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.work{display:grid;grid-template-columns:minmax(300px,390px) 1fr;gap:14px;align-items:start}
+.figs{display:grid;gap:14px;position:sticky;top:10px}
+.figs .card{padding:6px}
+.main{display:grid;gap:14px;min-width:0}
+.meters{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.meter{background:var(--pane);border:1px solid var(--line);padding:9px 11px;display:grid;gap:3px;border-radius:2px}
+.meter .l{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:.9rem}
+.meter .l span:last-child{font-family:var(--mono);font-weight:500;font-size:.72rem;padding:0 6px;border-radius:2px}
+.meter .v{font-family:var(--mono);font-size:.95rem;font-weight:500}
+.meter .c{font-size:.78rem;color:var(--mute);line-height:1.3}
+.bar{position:relative;height:9px;background:var(--pane2);border:1px solid var(--line);margin:2px 0}
+.bar i{display:block;height:100%;background:var(--ok)}
+.bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.meter.warn .bar i{background:var(--warn)}.meter.bad .bar i{background:var(--bad)}
+.meter.warn .l span:last-child{background:var(--warnbg);color:var(--warn)}.meter.bad .l span:last-child{background:var(--badbg);color:var(--bad)}.meter.ok .l span:last-child{background:var(--okbg);color:var(--ok)}
+.kpis{display:flex;gap:8px 22px;flex-wrap:wrap;padding:2px 2px}
+.kpi{display:grid}
+.kpi b{font-family:var(--mono);font-size:1.25rem;font-weight:500}
+.kpi span{font-size:.78rem;color:var(--mute)}
+.tabs{display:flex;gap:0;flex-wrap:wrap;border-bottom:2px solid var(--ink)}
+.tab{border:1px solid var(--line);border-bottom:none;background:var(--pane2);padding:9px 14px;cursor:pointer;font-weight:700;display:flex;gap:8px;align-items:center;border-radius:3px 3px 0 0;margin-right:3px}
+.tab[aria-selected=true]{background:var(--pane);border-color:var(--ink);box-shadow:0 2px 0 var(--pane);margin-bottom:-2px}
+.panel{display:grid;gap:18px;border-top:none;border-radius:0 2px 2px 2px}
+.role{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:center;padding:8px 10px;background:var(--pane2);border-left:4px solid var(--acc)}
+.role.locked{border-left-color:var(--mute)}
+fieldset.ctl{border:0;margin:0;padding:0;min-width:0;display:grid;gap:18px}
+fieldset.ctl[disabled]{opacity:.62}
+.sec{display:grid;gap:7px}
+.sec>h3{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.why{font-size:.86rem;color:var(--mute);max-width:78ch}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:8px}
+.opt{position:relative;text-align:left;display:grid;gap:3px;align-content:start;border:1px solid var(--line);background:var(--pane);padding:9px 11px 9px;border-radius:3px;cursor:pointer}
+.opt:hover{background:var(--pane2)}
+.opt b{font-weight:700;padding-right:18px}
+.opt .st{font-family:var(--mono);font-size:.74rem;color:var(--mute)}
+.opt .ds{font-size:.8rem;line-height:1.35}
+.opt[aria-pressed=true]{border:2px solid var(--acc);background:var(--pane2);padding:8px 10px}
+.opt[aria-pressed=true]::after{content:"✓";position:absolute;right:8px;top:6px;font-weight:800;color:var(--acc)}
+.opt[disabled]{opacity:.5;cursor:not-allowed}
+.opt .tagline{font-size:.76rem;font-weight:700}
+.sl{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.sl label{font-weight:700}.sl output{font-family:var(--mono);font-weight:500}
+.sl input{grid-column:1/-1;width:100%;accent-color:var(--acc);height:28px}
+.read{font-family:var(--mono);font-size:.8rem;background:var(--pane2);padding:6px 9px;border:1px dashed var(--line);line-height:1.5}
+.goals{display:grid;gap:7px}
+.goal{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr auto;gap:10px;align-items:center;font-size:.9rem}
+.goal .bar{margin:0}
+.goal .bar i{background:var(--acc)}
+.review ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:7px}
+.review li{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;padding:7px 9px;border-left:4px solid var(--line);background:var(--pane2);font-size:.9rem}
+.review li.block{border-left-color:var(--bad);background:var(--badbg)}
+.review li.bad{border-left-color:var(--bad)}
+.review li.warn{border-left-color:var(--warn)}
+.sev{font-weight:800;font-size:.76rem;white-space:nowrap}
+.review li.block .sev,.review li.bad .sev{color:var(--bad)}.review li.warn .sev{color:var(--warn)}
+.review .fix{grid-column:2;font-size:.82rem;color:var(--mute)}
+.who{font-size:.74rem;border:1px solid var(--line);padding:0 6px;border-radius:999px;margin-left:6px;white-space:nowrap;font-weight:500;color:var(--mute)}
+.clear{color:var(--ok);font-weight:700}
+.launch{display:grid;gap:10px}
+/* team bar */
+.team{display:grid;gap:8px;margin-bottom:12px}
+.team .top2{display:flex;gap:10px 16px;flex-wrap:wrap;align-items:center}
+.code{font-family:var(--mono);font-size:1.5rem;letter-spacing:.2em;font-weight:500;border:2px solid var(--ink);padding:0 10px;background:var(--pane)}
+.members{display:flex;gap:8px;flex-wrap:wrap}
+.mem{display:flex;gap:7px;align-items:center;border:1px solid var(--line);background:var(--pane);padding:3px 9px 3px 4px;border-radius:999px;font-size:.84rem}
+.notes{display:grid;gap:3px;font-size:.88rem}
+.notes input{flex:1;min-width:180px;padding:6px 9px;border:1px solid var(--ink);border-radius:3px;background:var(--pane)}
+.roletog{display:flex;gap:6px;flex-wrap:wrap}
+.roletog button{border:1px solid var(--line);background:var(--pane);border-radius:999px;padding:2px 10px;cursor:pointer;font-size:.82rem}
+.roletog button[aria-pressed=true]{background:var(--ink);color:var(--pane);border-color:var(--ink)}
+.coach{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center;margin-bottom:12px;border:1px solid var(--ink);background:var(--pane);padding:9px 12px}
+.coach ol{margin:0;padding:0;list-style:none;display:flex;gap:6px 20px;flex-wrap:wrap;counter-reset:s}
+.coach li{counter-increment:s;font-size:.9rem}
+.coach li::before{content:counter(s) ". ";font-weight:800;font-family:var(--mono)}
+/* fly / result */
+.fly{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:14px;align-items:start}
+.phases{display:flex;gap:6px;flex-wrap:wrap}
+.phase{padding:4px 12px;border:1px solid var(--line);border-radius:999px;font-size:.86rem;color:var(--mute)}
+.phase.on{background:var(--ink);color:var(--pane);border-color:var(--ink);font-weight:700}
+.phase.done{border-color:var(--ok);color:var(--ok)}
+.log{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:420px;overflow:auto}
+.log li{padding:6px 10px;border-left:4px solid var(--line);background:var(--pane2);font-size:.92rem}
+.log li.good{border-left-color:var(--ok)}.log li.bad{border-left-color:var(--bad);background:var(--badbg)}
+.log .k{font-family:var(--mono);font-size:.74rem;color:var(--mute);margin-right:8px}
+.res{display:grid;gap:14px}
+.grade{display:grid;grid-template-columns:auto 1fr;gap:6px 26px;align-items:center}
+.grade .big{font-size:clamp(3.5rem,10vw,6.5rem);font-weight:800;font-stretch:125%;line-height:1;font-variant-numeric:tabular-nums}
+.grade h1{font-size:clamp(1.6rem,4vw,2.6rem)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.sc{display:grid;grid-template-columns:150px 1fr 70px;gap:10px;align-items:center;font-size:.9rem;margin:5px 0}
+.sc .bar{margin:0}.sc .bar i{background:var(--acc)}
+.reqs{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:5px}
+.reqs li{display:flex;gap:8px;font-size:.9rem}
+.reqs .y{color:var(--ok);font-weight:800}.reqs .n{color:var(--bad);font-weight:800}
+.less{display:grid;gap:10px}
+.less .it{border-left:4px solid var(--acc);padding:2px 0 2px 12px}
+.less .it b{display:block;font-stretch:110%}
+.lb{width:100%;border-collapse:collapse;font-size:.88rem}
+.lb th,.lb td{text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
+.lb th{font-weight:700}
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(5,12,30,.62);display:none;align-items:flex-start;justify-content:center;padding:calc(18px + env(safe-area-inset-top,0px)) 14px 18px;overflow:auto;z-index:50}
+#modal.on{display:flex}
+.sheet{background:var(--pane);border:2px solid var(--ink);max-width:880px;width:100%;padding:18px;display:grid;gap:14px}
+.sheet header{display:flex;gap:10px;align-items:center}.sheet header h2{margin-right:auto}
+.hb{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.hb div{border-left:4px solid var(--acc);padding-left:10px}.hb b{display:block}
+.tbl{width:100%;border-collapse:collapse;font-size:.86rem;display:block;overflow-x:auto}
+.tbl th,.tbl td{padding:5px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.sheet textarea{width:100%;min-height:70px;font-family:var(--mono);font-size:.74rem;padding:8px;background:var(--pane2);border:1px solid var(--line)}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--pane);padding:9px 16px;border-radius:3px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:90vw}
+#toast.on{opacity:1}
+svg text{font-family:var(--mono)}
+@media (max-width:980px){.work,.fly,.lobby,.cols{grid-template-columns:1fr}.figs{position:static;grid-template-columns:1fr 1fr}.meters{grid-template-columns:repeat(2,1fr)}.sc{grid-template-columns:110px 1fr 60px}}
+@media (max-width:640px){.figs{grid-template-columns:1fr}.meters{grid-template-columns:1fr 1fr}.goal{grid-template-columns:1fr auto}.goal .bar{grid-column:1/-1}.grade{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">Perigee<small>Space mission design studio</small></div>
+    <nav aria-label="Tools">
+      <button class="btn sm" data-act="handbook" type="button">Handbook</button>
+      <button class="btn sm" data-act="library" type="button">Saved designs</button>
+    </nav>
+  </header>
+  <main id="screen" aria-live="off"></main>
+</div>
+<div id="modal" role="dialog" aria-modal="true" aria-label="Details"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ===== PERIGEE · mission model (pure functions, no DOM) ===== */
+const G0 = 9.80665;
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const fmt = (x, d = 0) => (Math.abs(x) >= 1000 ? Math.round(x).toLocaleString("en-US") : (+x).toFixed(d));
+function rnd(seed, m, k) {
+  let t = (Math.imul(seed | 0, 2654435761) ^ Math.imul(m + 1, 40503) ^ Math.imul(k + 1, 9973)) >>> 0;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
+/* ---------- orbits ---------- */
+const ORB = {
+  leo: { n: "Low Earth orbit", alt: "500 km", tier: 1, ecl: .36, per: 1.6, cyc: 5400, rad: 2, dist: 1, con: .012, gap: .8, dvI: 0, dvY: 45, flux: 1361, cruise: 0, pass: 30, storm: .5, deb: .15, insR: 0, body: "earth",
+    note: "Close to Earth, so pictures are sharp and launches are cheap. But the thin atmosphere drags the craft down, it spends over a third of each 96-minute lap in shadow, and a ground station only sees it for a few minutes a day." },
+  sso: { n: "Sun-synchronous orbit", alt: "700 km, polar", tier: 2, ecl: .30, per: 1.65, cyc: 5300, rad: 5, dist: 1, con: .016, gap: .8, dvI: 0, dvY: 12, flux: 1361, cruise: 0, pass: 120, storm: .8, deb: .12, insR: 0, body: "earth",
+    note: "A polar orbit tuned so the craft crosses each place at the same local time every day, which keeps shadows consistent. Great for Earth observation. A little higher means much less drag, but more radiation." },
+  meo: { n: "Medium Earth orbit", alt: "20,000 km", tier: 3, ecl: .15, per: 12, cyc: 700, rad: 60, dist: .25, con: .08, gap: .4, dvI: 0, dvY: 6, flux: 1361, cruise: 0, pass: 600, storm: 1.2, deb: .03, insR: 0, body: "earth",
+    note: "Navigation-satellite territory. Each satellite sees a big slice of Earth for hours, but this is the heart of the Van Allen radiation belts, which are brutal on electronics and solar cells." },
+  geo: { n: "Geostationary orbit", alt: "35,786 km", tier: 4, ecl: .03, per: 24, cyc: 90, rad: 20, dist: .08, con: .9, gap: .1, dvI: 1500, dvY: 50, flux: 1361, cruise: 0, pass: 0, storm: 1.0, deb: .04, insR: .03, body: "earth",
+    note: "One lap takes exactly a day, so the craft hovers over one spot and a single ground station can talk to it all the time. The price: a long way up, so signals are weak, and the craft must fire its own engine to circularize." },
+  lun: { n: "Lunar orbit", alt: "100 km polar", tier: 5, ecl: .30, per: 2, cyc: 4000, rad: 6, dist: .01, con: .22, gap: .6, dvI: 900, dvY: 120, flux: 1361, cruise: .3, pass: 0, storm: 1.0, deb: .02, insR: .05, body: "moon",
+    note: "Three days from Earth. The Moon’s lumpy gravity slowly tugs a low orbit out of shape, so you carry fuel to keep correcting. Earth is far away and sometimes behind the Moon, so contact is limited." },
+  mar: { n: "Mars orbit", alt: "400 km", tier: 6, ecl: .30, per: 2.1, cyc: 3800, rad: 4, dist: .00035, con: .18, gap: 1.5, dvI: 1100, dvY: 15, flux: 590, cruise: 8, pass: 0, storm: 1.0, deb: .01, insR: .08, body: "mars",
+    note: "An eight-month cruise, one chance to brake into orbit, sunlight less than half as strong as at Earth, and radio signals that crawl. Everything about the spacecraft has to work the first time." }
+};
+
+/* ---------- launch vehicles (wet mass deliverable, kg, to each injection) ---------- */
+const LV = {
+  rs: { n: "Carpool-9 rideshare", cost: 4, rel: .93, lead: 6, cap: { leo: 160, sso: 120 }, blurb: "A seat on someone else’s rocket. Cheap, but only to low orbit and only small." },
+  kes: { n: "Kestrel small launcher", cost: 14, rel: .91, lead: 10, cap: { leo: 420, sso: 300 }, blurb: "A dedicated small rocket for small satellites." },
+  her: { n: "Heron medium launcher", cost: 58, rel: .95, lead: 14, cap: { leo: 2600, sso: 1800, meo: 950, geo: 420, lun: 320 }, blurb: "The workhorse. Reaches the Moon with a small craft; too small for Mars." },
+  con: { n: "Condor heavy launcher", cost: 150, rel: .965, lead: 20, cap: { leo: 9000, sso: 6200, meo: 4800, geo: 3000, lun: 2500, mar: 1700 }, blurb: "Goes anywhere in the game. Expensive, so it eats the budget." }
+};
+
+/* ---------- spacecraft parts ---------- */
+const BUS = {
+  micro: { n: "Micro bus (12U)", m: 14, pl: 15, area: .6, cost: 2.5, dev: 8, life: 3, risk: .03, d: "CubeSat-class. Cheap and quick, but carries almost nothing." },
+  small: { n: "Small bus", m: 60, pl: 80, area: 3, cost: 9, dev: 14, life: 6, risk: .02, d: "A fridge-sized satellite with room for a couple of instruments." },
+  med: { n: "Medium bus", m: 210, pl: 260, area: 14, cost: 32, dev: 20, life: 10, risk: .015, d: "A solid platform for a serious science mission." },
+  large: { n: "Large bus", m: 540, pl: 750, area: 45, cost: 85, dev: 28, life: 15, risk: .012, d: "Flagship class. Heavy, costly and slow to build." }
+};
+const CELL = {
+  si: { n: "Silicon cells", eff: .16, kg: 2.8, cost: .12, deg: .02, dev: 0, d: "Cheap and proven, but weaker and they age faster in radiation." },
+  ga: { n: "Triple-junction GaAs", eff: .29, kg: 2.2, cost: .75, deg: .008, dev: 6, adv: 1, d: "Almost twice the power per square metre and tougher, at six times the price." }
+};
+const BAT = {
+  li: { n: "Li-ion standard", wk: 140, cost: .0005, cl: 25000, d: "Reliable and long-lived over many charge cycles." },
+  lx: { n: "Li-ion high-energy", wk: 210, cost: .0011, cl: 15000, adv: 1, d: "Lighter for the same energy, but wears out sooner." }
+};
+const ADCS = {
+  mag: { n: "Magnetorquers + sun sensors", acc: 2, m: 1.5, p: 3, cost: .8, risk: .01, dev: 4, leo: 1, d: "Push against Earth’s magnetic field. Coarse (2°) and useless away from Earth." },
+  wh: { n: "Reaction wheels + star tracker", acc: .1, m: 9, p: 25, cost: 5, risk: .025, dev: 10, d: "Spinning wheels steer the craft; a star camera tells it where it points (0.1°)." },
+  cmg: { n: "Fine-pointing wheels", acc: .01, m: 22, p: 60, cost: 12, risk: .03, dev: 16, adv: 1, d: "Laboratory-grade steadiness (0.01°) for the most demanding instruments." }
+};
+const PROP = {
+  none: { n: "No propulsion", isp: 0, m: 0, cost: 0, risk: 0, dev: 0, d: "Nothing to steer with. The craft drifts and slowly decays." },
+  cold: { n: "Cold gas", isp: 65, m: 3, cost: .6, risk: .005, dev: 3, d: "Compressed gas puffs. Simple, safe, and very inefficient." },
+  mono: { n: "Monopropellant", isp: 220, m: 9, cost: 2.5, risk: .012, dev: 8, d: "One fuel, one catalyst. The everyday choice for small corrections." },
+  bi: { n: "Bipropellant", isp: 315, m: 24, cost: 7, risk: .02, dev: 14, d: "Two fuels burned together. Efficient enough for big orbit changes." },
+  hall: { n: "Electric (Hall) thruster", isp: 1600, m: 48, cost: 15, risk: .035, dev: 20, pw: 1500, adv: 1, d: "Needs very little propellant but is gentle: orbit changes take months and 1.5 kW." }
+};
+const CPU = {
+  basic: { n: "Commercial computer", tol: 20, m: .5, p: 3, cost: .6, risk: .04, dev: 2, d: "Cheap. Cosmic rays can upset it; tolerates about 20 krad." },
+  tol: { n: "Radiation-tolerant computer", tol: 80, m: 1.5, p: 5, cost: 3, risk: .02, dev: 6, d: "Shrugs off most radiation (about 80 krad)." },
+  hard: { n: "Radiation-hardened computer", tol: 250, m: 3, p: 8, cost: 9, risk: .01, dev: 12, adv: 1, d: "Built for the worst places (about 250 krad)." }
+};
+const RED = {
+  single: { n: "Single string", mm: 1, cm: 1, hz: 1, d: "One of everything. Light and cheap, but one failure ends the mission." },
+  cross: { n: "Cross-strapped", mm: 1.06, cm: 1.1, hz: .6, d: "Spare paths between key parts. Cuts failures by 40%." },
+  full: { n: "Fully redundant", mm: 1.14, cm: 1.25, hz: .3, d: "A complete backup. Cuts failures by 70%, costs 14% more mass." }
+};
+const SHD = {
+  none: { n: "No extra shielding", k: 1, mp: 0, cost: 0, d: "Standard skin only." },
+  light: { n: "Light shielding", k: 1.8, mp: .04, cost: 1.2, d: "Adds 4% mass, nearly doubles radiation tolerance." },
+  heavy: { n: "Heavy shielding", k: 3.5, mp: .10, cost: 4, d: "Adds 10% mass, multiplies tolerance by 3.5 and blunts debris hits." }
+};
+const ANT = {
+  uhf: { n: "UHF whip", rate: .1, m: .4, p: 5, cost: .3, pt: 30, dev: 2, d: "A wire. Tiny data rate; fine for a few sensor readings." },
+  s: { n: "S-band patch", rate: 2, m: .8, p: 8, cost: .8, pt: 10, dev: 3, d: "Small-satellite staple. About 2 Mbit/s from low orbit." },
+  xm: { n: "X-band medium-gain", rate: 60, m: 6, p: 25, cost: 3, pt: 2, dev: 8, d: "30 times faster than S-band. Needs 2° pointing." },
+  xh: { n: "X-band dish (1 m)", rate: 400, m: 22, p: 60, cost: 9, pt: .5, dev: 12, d: "A real dish. Big data rates, but needs 0.5° pointing." },
+  ka: { n: "Ka-band dish (1.5 m)", rate: 1500, m: 35, p: 110, cost: 22, pt: .2, dev: 18, adv: 1, d: "The fastest option. Needs 0.2° pointing and lots of power." }
+};
+const GND = {
+  u: { n: "University station", cnt: 1, rm: 1, cy: .5, d: "One 3 m dish. Cheap, with very short contact." },
+  r: { n: "Regional network", cnt: 3, rm: 1.2, cy: 1.6, d: "Three stations spread across a continent." },
+  g: { n: "Global commercial network", cnt: 10, rm: 1.5, cy: 4.5, d: "Ten stations worldwide. Many more passes per day." },
+  d: { n: "Deep-space network time", cnt: 3, rm: 12, cy: 8, min: 4, d: "Giant 34–70 m dishes. Only sold for missions beyond Earth orbit." }
+};
+const PROC = {
+  none: { n: "Send everything", f: 1, m: 0, p: 0, cost: 0, q: 1, dev: 0, d: "Downlink raw data exactly as measured." },
+  cmp: { n: "Compress on board", f: .6, m: 1, p: 3, cost: 1, q: .98, dev: 2, d: "Squeezes data to 60% with almost no loss." },
+  ai: { n: "Edge-AI: send only the interesting parts", f: .25, m: 2.5, p: 20, cost: 5, q: .93, dev: 6, adv: 1, d: "Cuts data to 25%, at a small cost in completeness." }
+};
+const STO = [32, 128, 512, 2048];
+const STOM = { 32: .2, 128: .5, 512: 1.2, 2048: 3 };
+const STOC = { 32: .4, 128: 1.2, 512: 3, 2048: 8 };
+
+/* ---------- instruments ---------- */
+const INST = {
+  pan: { n: "Panchromatic camera", c: "PC", m: 8, p: 25, cost: 6, d: 12, q: { vis: .6 }, pt: .5, risk: .02, dev: 6, t: "Black-and-white pictures. Simple, light, cheap." },
+  ms: { n: "Multispectral imager", c: "MS", m: 25, p: 45, cost: 14, d: 40, q: { multi: 1, vis: .8 }, pt: .3, risk: .025, dev: 10, t: "Color plus infrared bands: plant health, water, clouds." },
+  hy: { n: "Hyperspectral imager", c: "HS", m: 60, p: 120, cost: 32, d: 90, q: { hyper: 1, multi: 1, spec: .7, vis: .9 }, pt: .1, risk: .04, dev: 16, adv: 1, t: "Hundreds of narrow color bands: identifies materials by fingerprint." },
+  hr: { n: "High-resolution camera", c: "HR", m: 65, p: 100, cost: 30, d: 36, q: { hires: 1, vis: 1 }, pt: .1, risk: .035, dev: 16, adv: 1, t: "A big telescope. Sees details a few metres across." },
+  ir: { n: "Thermal IR radiometer", c: "IR", m: 12, p: 30, cost: 9, d: 6, q: { ir: 1 }, pt: .3, risk: .02, dev: 8, t: "Measures heat: land, sea and cloud-top temperature." },
+  sar: { n: "Radar imager (SAR)", c: "SR", m: 180, p: 800, cost: 55, d: 120, q: { sar: 1 }, pt: .5, risk: .05, dev: 22, adv: 1, t: "Sees through cloud and darkness. Heavy and power-hungry." },
+  snd: { n: "Atmospheric sounder", c: "AS", m: 45, p: 90, cost: 24, d: 4, q: { sounder: 1, ir: .5 }, pt: .3, risk: .03, dev: 14, t: "Profiles temperature, moisture or dust layer by layer." },
+  mag: { n: "Magnetometer", c: "MG", m: 2, p: 3, cost: 1.2, d: .1, q: { mag: 1 }, pt: 5, risk: .01, dev: 3, t: "Measures magnetic fields. Tiny and cheap." },
+  par: { n: "Particle detector", c: "PD", m: 4, p: 6, cost: 2, d: .05, q: { part: 1, mag: .3 }, pt: 5, risk: .01, dev: 3, t: "Counts radiation particles: space weather and dose." },
+  alt: { n: "Laser altimeter", c: "LA", m: 28, p: 50, cost: 20, d: 1, q: { alt: 1 }, pt: .05, risk: .03, dev: 14, t: "Bounces laser pulses to build a 3D height map. Needs very steady pointing." },
+  spec: { n: "Imaging spectrometer", c: "SP", m: 35, p: 55, cost: 18, d: 12, q: { spec: 1, multi: .6 }, pt: .2, risk: .03, dev: 12, t: "Maps minerals and surface chemistry." },
+  gam: { n: "Gamma-ray & neutron spectrometer", c: "GN", m: 20, p: 20, cost: 11, d: .3, q: { gamma: 1 }, pt: 2, risk: .02, dev: 10, t: "Detects hydrogen, so it can find buried water ice." },
+  rad: { n: "Subsurface sounding radar", c: "SS", m: 55, p: 140, cost: 29, d: 5, q: { sub: 1, gamma: .85 }, pt: 1, risk: .035, dev: 16, t: "Radar that penetrates the ground to find ice and layers." }
+};
+
+/* ---------- scenarios ---------- */
+const SC = {
+  eo: { n: "Coast & Crop Watch", kind: "Earth observation", blurb: "Help a coastal nation track crop health, flooding and land temperature. A city-sized budget, a deadline, and a lot of data to bring home.", budget: 260, win: 42, tgt: 36, sug: "sso", fit: { leo: .75, sso: 1, meo: .3, geo: .4, lun: 0, mar: 0 },
+    goals: [{ n: "Track crop health", tags: ["multi", "hyper"], w: 30, crit: 1 }, { n: "Map flooding through cloud", tags: ["sar"], w: 25 }, { n: "Measure land temperature", tags: ["ir"], w: 20 }, { n: "Sharp field-scale pictures", tags: ["hires", "vis"], w: 25, crit: 1 }] },
+  wx: { n: "Storm Eye", kind: "Weather from geostationary orbit", blurb: "Watch a whole hemisphere around the clock to give storms hours of extra warning. Getting to 36,000 km is the hard part.", budget: 420, win: 48, tgt: 60, sug: "geo", fit: { leo: .25, sso: .45, meo: .2, geo: 1, lun: 0, mar: 0 },
+    goals: [{ n: "Image storm clouds", tags: ["vis", "multi"], w: 35, crit: 1 }, { n: "Read cloud-top temperatures", tags: ["ir"], w: 25 }, { n: "Profile the atmosphere", tags: ["sounder"], w: 25, crit: 1 }, { n: "Monitor space weather", tags: ["part", "mag"], w: 15 }] },
+  lun: { n: "Moon Water Scout", kind: "Lunar orbiter", blurb: "Hunt for water ice in permanently shadowed craters and map safe landing sites. Distant, radiation-exposed and fuel-hungry.", budget: 480, win: 42, tgt: 24, sug: "lun", fit: { leo: 0, sso: 0, meo: 0, geo: 0, lun: 1, mar: 0 },
+    goals: [{ n: "Detect water ice", tags: ["gamma", "sub"], w: 35, crit: 1 }, { n: "Map surface minerals", tags: ["spec", "hyper"], w: 25 }, { n: "Survey landing-site heights", tags: ["alt", "hires"], w: 25, crit: 1 }, { n: "Find magnetic anomalies", tags: ["mag"], w: 15 }] },
+  mar: { n: "Mars Climate Orbiter", kind: "Interplanetary orbiter", blurb: "Spend two Mars years watching dust storms, ice and weather. One launch window, one braking burn, a faint signal home.", budget: 780, win: 42, tgt: 48, sug: "mar", fit: { leo: 0, sso: 0, meo: 0, geo: 0, lun: 0, mar: 1 },
+    goals: [{ n: "Profile dust and weather", tags: ["sounder"], w: 30, crit: 1 }, { n: "Image the surface", tags: ["hires", "vis"], w: 25, crit: 1 }, { n: "Find subsurface ice", tags: ["sub"], w: 25 }, { n: "Measure radiation and fields", tags: ["part", "mag"], w: 20 }] },
+  sb: { n: "Sandbox", kind: "Free experiment", blurb: "No budget, no deadline, rare failures. Try anything and watch what the numbers do. Not ranked.", budget: 1e6, win: 999, tgt: 36, sug: "sso", fit: { leo: 1, sso: 1, meo: 1, geo: 1, lun: 1, mar: 1 },
+    goals: [{ n: "Imaging", tags: ["multi", "hyper", "vis", "hires"], w: 25 }, { n: "Heat", tags: ["ir"], w: 15 }, { n: "Radar", tags: ["sar", "sub"], w: 15 }, { n: "Atmosphere", tags: ["sounder"], w: 15 }, { n: "Chemistry", tags: ["spec", "gamma"], w: 10 }, { n: "Fields & particles", tags: ["mag", "part"], w: 10 }, { n: "Heights", tags: ["alt"], w: 10 }] }
+};
+const DF = {
+  learn: { n: "Cadet", bm: 1.35, ev: .4, lvb: .03, adv: false, d: "Bigger budget, simpler parts, fewer surprises." },
+  eng: { n: "Engineer", bm: 1, ev: 1, lvb: 0, adv: true, d: "The full parts list and realistic risks." },
+  chief: { n: "Chief engineer", bm: .88, ev: 1.6, lvb: -.015, adv: true, d: "Tighter budget, more things go wrong." }
+};
+
+/* ---------- design defaults / starters ---------- */
+const DEFAULTS = {
+  lead: { sc: "eo", df: "eng", orb: "sso", lv: "her" },
+  eng: { bus: "small", cell: "si", area: 2, bat: "li", wh: 400, adcs: "wh", prop: "mono", pm: 20, cpu: "tol", red: "single", shd: "none" },
+  sci: { inst: [] },
+  com: { ant: "s", gnd: "u", proc: "none", sto: 128, duty: 60 },
+  x: { sd: 1 }
+};
+const STARTERS = {
+  eo: { lead: { sc: "eo", orb: "sso", lv: "kes" }, eng: { bus: "small", cell: "ga", area: .8, bat: "li", wh: 400, adcs: "wh", prop: "mono", pm: 25, cpu: "tol", red: "single", shd: "none" }, sci: { inst: ["ms", "ir", "pan"] }, com: { ant: "xm", gnd: "g", proc: "cmp", sto: 128, duty: 60 } },
+  wx: { lead: { sc: "wx", orb: "geo", lv: "con" }, eng: { bus: "med", cell: "ga", area: 1.1, bat: "li", wh: 500, adcs: "wh", prop: "bi", pm: 20, cpu: "hard", red: "cross", shd: "light" }, sci: { inst: ["ms", "ir", "snd", "par"] }, com: { ant: "xm", gnd: "u", proc: "cmp", sto: 128, duty: 70 } },
+  lun: { lead: { sc: "lun", orb: "lun", lv: "con" }, eng: { bus: "med", cell: "ga", area: 1.1, bat: "li", wh: 350, adcs: "wh", prop: "bi", pm: 25, cpu: "tol", red: "cross", shd: "light" }, sci: { inst: ["gam", "spec", "alt", "mag"] }, com: { ant: "xh", gnd: "d", proc: "cmp", sto: 128, duty: 50 } },
+  mar: { lead: { sc: "mar", orb: "mar", lv: "con" }, eng: { bus: "large", cell: "ga", area: 3.6, bat: "li", wh: 600, adcs: "wh", prop: "bi", pm: 25, cpu: "tol", red: "cross", shd: "light" }, sci: { inst: ["snd", "hr", "rad", "par"] }, com: { ant: "xh", gnd: "d", proc: "ai", sto: 512, duty: 40 } },
+  sb: { lead: { sc: "sb", orb: "sso", lv: "kes" }, eng: { bus: "small", cell: "ga", area: .8, bat: "li", wh: 400, adcs: "wh", prop: "mono", pm: 25, cpu: "tol", red: "single", shd: "none" }, sci: { inst: ["ms", "ir"] }, com: { ant: "xm", gnd: "g", proc: "cmp", sto: 128, duty: 60 } }
+};
+const TABLES = { sc: SC, df: DF, orb: ORB, lv: LV, bus: BUS, cell: CELL, bat: BAT, adcs: ADCS, prop: PROP, cpu: CPU, red: RED, shd: SHD, ant: ANT, gnd: GND, proc: PROC };
+const NUMR = { area: [0, 50], wh: [0, 9000], pm: [0, 100], duty: [10, 100], sd: [1, 999999] };
+const KEYROLE = {}; for (const r in DEFAULTS) for (const k in DEFAULTS[r]) KEYROLE[k] = r;
+
+function flatten(G) { const D = {}; for (const r of ["lead", "eng", "sci", "com", "x"]) Object.assign(D, DEFAULTS[r], (G[r] && G[r].v) || {}); return D; }
+function cleanGroup(role, v) {
+  const out = {}; if (!v || typeof v !== "object") return null;
+  for (const k in DEFAULTS[role]) {
+    const dv = DEFAULTS[role][k], x = v[k];
+    if (k === "inst") { out.inst = Array.isArray(x) ? [...new Set(x.filter(i => INST[i]))].slice(0, 6) : []; }
+    else if (k === "sto") { out.sto = STO.includes(x) ? x : dv; }
+    else if (TABLES[k]) { out[k] = (typeof x === "string" && TABLES[k][x]) ? x : dv; }
+    else if (NUMR[k]) { out[k] = typeof x === "number" && isFinite(x) ? clamp(x, NUMR[k][0], NUMR[k][1]) : dv; }
+    else out[k] = dv;
+  }
+  return out;
+}
+
+/* ---------- design analysis ---------- */
+function goalQ(goal, list, acc, pcq) {
+  let best = 0;
+  for (const i of list) {
+    const pf = acc <= i.pt ? 1 : Math.pow(i.pt / acc, .7);
+    for (const t of goal.tags) best = Math.max(best, (i.q[t] || 0) * pf);
+  }
+  return best * pcq;
+}
+function sciOf(sc, list, acc, pcq) { let s = 0; for (const g of sc.goals) s += g.w * goalQ(g, list, acc, pcq); return s / 100; }
+function dataRetOf(list, c) {
+  const raw = list.reduce((s, i) => s + i.d * c.duty, 0), proc = raw * c.pcf;
+  if (proc <= 0) return { raw, proc, ret: list.length ? 1 : 0, need: 0 };
+  const need = proc * c.gap, stoF = Math.min(1, c.sto / Math.max(need, .001));
+  return { raw, proc, need, ret: Math.min(1, c.dl / proc) * Math.sqrt(stoF) };
+}
+
+function analyze(D) {
+  const sc = SC[D.sc], df = DF[D.df], o = ORB[D.orb], lv = LV[D.lv], bus = BUS[D.bus], cell = CELL[D.cell], bat = BAT[D.bat], ad0 = ADCS[D.adcs], pr = PROP[D.prop], cpu = CPU[D.cpu], red = RED[D.red], shd = SHD[D.shd], ant = ANT[D.ant], pc = PROC[D.proc];
+  let gnd = GND[D.gnd];
+  const insts = (D.inst || []).map(i => INST[i]).filter(Boolean);
+  const sandbox = D.sc === "sb";
+  const duty = D.duty / 100, T = sc.tgt, Ty = T / 12;
+  const F = []; const add = (sev, owner, msg, fix) => F.push({ sev, owner, msg, fix: fix || "" });
+
+  // ground network validity
+  if (gnd.min && o.tier < gnd.min) { add("block", "com", "Deep-space network time is only sold for missions beyond low Earth orbit.", "Comms & Ops: choose a regional or commercial network."); gnd = GND.g; }
+  const sandboxLessBlocks = false;
+
+  // pointing
+  let acc = ad0.acc;
+  if (ad0.leo && o.tier > 2) { acc = 15; add("bad", "eng", "Magnetorquers have nothing to push against out here, so pointing is hopeless (about 15°).", "Engineer: switch to reaction wheels."); }
+
+  // mass
+  const instM = insts.reduce((s, i) => s + i.m, 0), instCost = insts.reduce((s, i) => s + i.cost, 0), instP = insts.reduce((s, i) => s + i.p, 0) * duty;
+  const busSub = bus.m + D.area * cell.kg + D.wh / bat.wk + ad0.m + pr.m + cpu.m + ant.m + pc.m + STOM[D.sto];
+  const dry = (busSub * red.mm * (1 + shd.mp) + instM) * 1.06;
+  const dvTot = o.dvI + o.dvY * Ty;
+  let prop = 0, propLifeY = 99, dvLoad = 0;
+  if (pr.isp > 0) {
+    const ve = pr.isp * G0;
+    prop = dry * (Math.exp(dvTot / ve) - 1) * (1 + D.pm / 100);
+    dvLoad = ve * Math.log(1 + prop / dry);
+    propLifeY = o.dvY > 0 ? Math.max(0, dvLoad - o.dvI) / o.dvY : 99;
+  } else {
+    propLifeY = o.pass ? o.pass / 12 : 0;
+    if (o.dvI > 0) add("block", "eng", `This orbit needs ${fmt(o.dvI)} m/s of braking from the spacecraft itself, and there is no engine.`, "Engineer: add propulsion.");
+  }
+  const launchMass = dry + prop, cap = lv.cap[D.orb] || 0;
+  const massM = cap > 0 ? (cap - launchMass) / cap : -1;
+  if (cap === 0) add("block", "lead", `${lv.n} cannot reach ${o.n.toLowerCase()} at all.`, "Mission Lead: pick a bigger rocket or a different orbit.");
+  else if (launchMass > cap) add("block", "lead", `Launch mass is ${fmt(launchMass)} kg but ${lv.n} can only deliver ${fmt(cap)} kg there.`, "Engineer: trim mass or propellant · Science: drop an instrument · Mission Lead: bigger rocket.");
+
+  // structure fit
+  if (D.area > bus.area) add("block", "eng", `${bus.n} has room for ${bus.area} m² of solar array, but you asked for ${(+D.area).toFixed(1)} m².`, "Engineer: smaller array or a bigger bus.");
+  if (instM > bus.pl) add("block", "sci", `${bus.n} can hold ${bus.pl} kg of instruments; you picked ${fmt(instM)} kg.`, "Science: drop one · Engineer: bigger bus.");
+  if (!insts.length) add("block", "sci", "No instruments yet. A spacecraft without science is just expensive scrap.", "Science: pick at least one instrument.");
+
+  // power
+  const flux = o.flux, G = flux * D.area * cell.eff * .75, Gavg0 = G * (1 - o.ecl);
+  const contact = D.orb === "geo" ? .9 : Math.min(.9, o.con * gnd.cnt);
+  const commF = clamp(.1 + contact * 2, .1, 1);
+  const busLoad = 15 + cpu.p + ad0.p + pc.p + ant.p * commF;
+  const load = busLoad + instP;
+  const degr = cell.deg * (.6 + o.rad / 10);
+  const GavgEOL = Gavg0 * Math.max(0, 1 - degr * Ty);
+  const powM = load > 0 ? GavgEOL / load - 1 : 9;
+  const ecH = o.ecl * o.per, batReq = load * ecH / .35;
+  const batM = batReq > 0 ? D.wh / batReq : 9;
+  const batLifeY = Math.min(25, bat.cl / o.cyc * Math.pow(clamp(batM, .1, 2), 1.2));
+  const powLifeY = Gavg0 <= load ? 0 : Math.min(40, (1 - load / Gavg0) / degr);
+
+  // radiation
+  const radLifeY = cpu.tol * shd.k / o.rad;
+
+  // comms and data
+  const pointF = acc <= ant.pt ? 1 : Math.max(.02, Math.pow(ant.pt / acc, 2));
+  const rate = ant.rate * o.dist * gnd.rm * pointF;
+  const dl = rate * contact * 9.18;
+  const dctx = { duty, pcf: pc.f, dl, sto: D.sto, gap: o.gap };
+  const dr = dataRetOf(insts, dctx);
+
+  // schedule
+  const devM = Math.max(bus.dev, ad0.dev, pr.dev, cpu.dev, ant.dev, cell.dev, pc.dev, lv.lead, ...insts.map(i => i.dev), 0) + 4 + .8 * insts.length + (D.red !== "single" ? 2 : 0);
+  const slack = sc.win - devM;
+  const transferM = pr.pw && o.dvI > 0 ? 6 * Math.max(1, pr.pw / Math.max(G, 1)) : 0;
+  const cruiseM = o.cruise + transferM;
+  if (devM > sc.win) add("block", "lead", `This design takes about ${fmt(devM, 0)} months to build; the launch window closes in ${sc.win}.`, "Pick simpler, faster parts or a smaller bus.");
+
+  // lifetime
+  const lifeParts = [["propellant", propLifeY], ["battery wear", batLifeY], ["radiation damage to the computer", radLifeY], ["solar array ageing and power", powLifeY], ["the bus structure’s design life", bus.life]];
+  let lim = lifeParts[0]; for (const p of lifeParts) if (p[1] < lim[1]) lim = p;
+  const lifeM = Math.max(0, lim[1] * 12);
+
+  // cost
+  const scSub = bus.cost + D.area * cell.cost + D.wh * bat.cost + ad0.cost + pr.cost + cpu.cost + ant.cost + pc.cost + STOC[D.sto] + shd.cost;
+  const scCost = scSub * red.cm + instCost, itCost = scCost * .12, opsCost = gnd.cy * Ty;
+  const cost = scCost + itCost + lv.cost + opsCost;
+  const budget = sc.budget * df.bm;
+  const reserve = (budget - cost) / budget;
+  if (!sandbox && cost > budget) add("block", "lead", `Total cost is $${fmt(cost)}M but the budget is $${fmt(budget)}M.`, "Trim an instrument, shrink the bus, or pick a cheaper rocket.");
+
+  // reliability
+  const lam = (bus.risk + ad0.risk + pr.risk + cpu.risk + .02) * red.hz;
+  const advN = [cell, bat, ad0, pr, cpu, ant, pc].filter(x => x.adv).length + insts.filter(i => i.adv).length;
+  const relPred = (lv.rel + df.lvb) * Math.exp(-lam * Math.min(Ty, lifeM / 12));
+
+  // science
+  const fit = sc.fit[D.orb];
+  const sci0 = sciOf(sc, insts, acc, pc.q);
+  const dutyF = Math.pow(duty, .6);
+  const S0 = sci0 * fit * dr.ret * dutyF;
+  const goals = sc.goals.map(g => ({ n: g.n, w: g.w, crit: g.crit, q: goalQ(g, insts, acc, pc.q) }));
+
+  // flags: serious / warning
+  if (fit === 0) add("bad", "lead", `${o.n} cannot do this mission: ${sc.n} needs ${ORB[sc.sug].n.toLowerCase()}.`, "Mission Lead: choose the orbit the mission needs.");
+  else if (fit < .6) add("warn", "lead", `${o.n} is a weak fit for this goal (${Math.round(fit * 100)}% as useful as the best orbit).`, "Mission Lead: consider " + ORB[sc.sug].n.toLowerCase() + ".");
+  if (powM < 0) add("bad", "eng", `Power: the spacecraft needs ${fmt(load)} W but the array will only average ${fmt(GavgEOL)} W by end of life.`, "Engineer: bigger or better array · Science: drop a power-hungry instrument · Comms & Ops: lower duty cycle.");
+  else if (powM < .05) add("warn", "eng", `Power margin is only ${Math.round(powM * 100)}%. Any surprise will cause brown-outs.`, "Engineer: a little more array.");
+  if (batM < 1) add("bad", "eng", `Battery holds ${fmt(D.wh)} Wh but the craft needs about ${fmt(batReq)} Wh to ride through each ${ecH.toFixed(1)} h eclipse.`, "Engineer: more battery capacity, or Comms & Ops: lower duty cycle.");
+  if (dr.proc > 0 && dr.ret < .5) add("bad", "com", `Only ${Math.round(dr.ret * 100)}% of the data can reach Earth: ${fmt(dr.proc, 1)} GB/day produced, about ${fmt(Math.min(dl, 99999), 1)} GB/day deliverable.`, "Comms & Ops: bigger antenna, more stations, compression · Science: fewer data-heavy instruments.");
+  else if (dr.proc > 0 && dr.ret < .85) add("warn", "com", `About ${Math.round((1 - dr.ret) * 100)}% of the data will be lost (produced ${fmt(dr.proc, 1)} GB/day vs ${fmt(Math.min(dl, 99999), 1)} GB/day deliverable).`, "Comms & Ops: stronger link or on-board processing.");
+  if (dr.need > 0 && D.sto < dr.need) add("warn", "com", `On-board storage (${D.sto} GB) is smaller than the ~${fmt(dr.need, 0)} GB that builds up between ground contacts.`, "Comms & Ops: more storage.");
+  if (ant.pt < acc) add("warn", "eng", `${ant.n} needs pointing of ${ant.pt}° but the attitude system only holds ${acc}°, so the link loses ${Math.round((1 - pointF) * 100)}% of its rate.`, "Engineer: better pointing · Comms & Ops: lower-gain antenna.");
+  const pointLoss = insts.filter(i => i.pt < acc);
+  if (pointLoss.length) add("warn", "sci", `${pointLoss.map(i => i.n).join(", ")} ${pointLoss.length > 1 ? "need" : "needs"} steadier pointing than ${acc}°, so ${pointLoss.length > 1 ? "their" : "its"} data quality drops.`, "Engineer: upgrade attitude control · Science: swap the instrument.");
+  for (const g of goals) if (g.crit && g.q < .6) add(g.q === 0 ? "bad" : "warn", "sci", `Critical goal “${g.n}” is only ${Math.round(g.q * 100)}% covered.`, "Science: add or swap an instrument that measures it.");
+  if (radLifeY < Ty) add("bad", "eng", `Radiation will wear out the computer in about ${radLifeY.toFixed(1)} years, short of the ${Ty.toFixed(1)}-year goal.`, "Engineer: radiation-tolerant computer or more shielding.");
+  if (propLifeY < Ty && pr.isp > 0) add("bad", "eng", `Fuel for station-keeping lasts ${Math.max(0, propLifeY).toFixed(1)} years, not ${Ty.toFixed(1)}.`, "Engineer: raise propellant margin or use a more efficient engine.");
+  else if (pr.isp === 0 && o.pass && propLifeY < Ty) add("bad", "eng", `With no engine the orbit will decay in about ${propLifeY.toFixed(1)} years.`, "Engineer: add propulsion.");
+  if (lifeM < T && !(radLifeY < Ty) && !(propLifeY < Ty)) add("bad", "eng", `Estimated life is ${(lifeM / 12).toFixed(1)} years, limited by ${lim[0]}. The goal is ${Ty.toFixed(1)}.`, "Engineer: address " + lim[0] + ".");
+  if (cap > 0 && launchMass <= cap) {
+    if (massM < .05) add("warn", "eng", `Only ${Math.round(massM * 100)}% mass margin on the rocket. Real teams keep 10% or more.`, "Trim mass.");
+    else if (massM > .35) add("warn", "lead", `The rocket has ${Math.round(massM * 100)}% spare capacity. You are paying for lift you do not use.`, "Mission Lead: a smaller, cheaper rocket · Science: add instruments.");
+  }
+  if (!sandbox && cost <= budget && reserve < .05) add("warn", "lead", `Budget reserve is only ${Math.round(reserve * 100)}%. Costs usually grow during development.`, "Hold back a few percent.");
+  if (slack >= 0 && slack < 3) add("warn", "lead", `Only ${slack.toFixed(1)} months of schedule slack. One supplier delay would miss the launch window.`, "Choose simpler or more mature parts.");
+  if (D.red === "single" && ["geo", "meo", "lun", "mar"].includes(D.orb)) add("warn", "eng", "Single-string electronics this far from home: a single fault cannot be fixed.", "Engineer: cross-strap or add redundancy.");
+  const crit = goals.filter(g => g.crit).length;
+
+  return { sc, df, o, lv, bus, cell, bat, ad: ad0, pr, cpu, red, shd, ant, gnd, pc, insts, sandbox, duty, T, Ty,
+    instM, instCost, dry, prop, launchMass, cap, massM, dvTot, dvLoad, propLifeY, G, Gavg0, GavgEOL, load, busLoad, instP, powM, degr, ecH, batReq, batM, batLifeY, powLifeY, radLifeY,
+    acc, pointF, rate, contact, dl, dr, dataRet: dr.ret, devM, slack, cruiseM, transferM, lifeM, lim: lim[0], cost, scCost, itCost, opsCost, budget, reserve, lam, advN, relPred, fit, sci0, dutyF, S0, goals, flags: F, dctx, crit,
+    blocked: F.some(f => f.sev === "block") };
+}
+
+/* ---------- flight simulation + scoring ---------- */
+function band(x, lo, hi) { if (x < 0) return 0; if (x < lo) return x / lo; if (x <= hi) return 1; return Math.max(.5, 1 - (x - hi) / (hi * 3)); }
+
+function simulate(D, A, seed, team) {
+  const ev = A.df.ev * (A.sandbox ? .3 : 1), o = A.o, T = A.T;
+  const log = []; let cum = 0, ops = 0, fail = null, launchOk = true, slip = 0, missed = false;
+  const L = (m, kind, text) => log.push({ m, kind, text, sci: cum, ph: curPh });
+  let curPh = "Build";
+  L(0, "info", `Design frozen: ${A.bus.n}, ${A.lv.n}, ${A.o.n.toLowerCase()}. Estimated build time ${fmt(A.devM)} months; launch window closes in ${A.sc.win >= 999 ? "—" : A.sc.win}.`);
+  const pSlip = A.df === DF.learn ? .15 : A.df === DF.chief ? .6 : .35;
+  if (!A.sandbox && rnd(seed, 0, 0) < pSlip) {
+    slip = 1 + Math.floor(rnd(seed, 0, 1) * 3);
+    if (A.slack < slip) { missed = true; L(Math.round(A.devM), "bad", `A supplier slipped ${slip} months. With only ${Math.max(0, A.slack).toFixed(1)} months of slack, the team misses the launch window and waits for the next one.`); }
+    else L(Math.round(A.devM), "good", `A supplier slipped ${slip} months, but ${A.slack.toFixed(1)} months of schedule slack absorbed it.`);
+  }
+  curPh = "Launch";
+  const pL = A.lv.rel + A.df.lvb;
+  if (rnd(seed, 0, 2) >= pL) {
+    launchOk = false; fail = { cause: "Launch failure", why: `${A.lv.n} has a ${Math.round(pL * 100)}% success rate, and this flight fell in the other ${Math.round((1 - pL) * 100)}%. No spacecraft design can remove launch risk; it can only be bought down with a more proven rocket.` };
+    L(0, "bad", `Liftoff. Ninety seconds in, ${A.lv.n} suffers an anomaly and the mission is lost.`);
+    return finish();
+  }
+  L(0, "good", `Liftoff on ${A.lv.n}. The spacecraft separates healthy.`);
+  curPh = "Cruise";
+  if (A.cruiseM > .5) L(0, "info", A.transferM > 0 ? `${Math.round(A.cruiseM)} months of gentle thrusting to climb to the final orbit.` : `${Math.round(A.cruiseM)}-month cruise toward the destination.`);
+  if (o.dvI > 0) {
+    const pI = o.insR * (A.pr.isp > 400 ? .6 : 1) * ev;
+    if (rnd(seed, 0, 3) < pI) { fail = { cause: "Orbit insertion failure", why: `Putting a spacecraft into ${o.n.toLowerCase()} takes one big burn (${fmt(o.dvI)} m/s) and carries about ${Math.round(o.insR * 100)}% risk on this class of mission.` }; L(Math.round(A.cruiseM), "bad", "The braking burn does not go as planned. The spacecraft misses its orbit."); return finish(); }
+    L(Math.round(A.cruiseM), "good", `Insertion burn complete. The spacecraft is in ${o.n.toLowerCase()}.`);
+  }
+  curPh = "Commission";
+  const pC = (.01 + .015 * A.advN) * ev;
+  if (rnd(seed, 0, 4) < pC) { fail = { cause: "Commissioning anomaly", why: `Your design uses ${A.advN} advanced part${A.advN === 1 ? "" : "s"}. New technology has little flight history, and a bug in the first weeks is the most common way it shows.` }; L(Math.round(A.cruiseM) + 1, "bad", "During checkout a power switch latches. The spacecraft never leaves safe mode."); return finish(); }
+  L(Math.round(A.cruiseM) + 1, "good", "Commissioning complete. Instruments open their covers.");
+  curPh = "Operate";
+  let alive = A.insts.slice(), acc = A.acc, stormMod = 1;
+  const t0 = Math.round(A.cruiseM) + 1;
+  const sys = ["flight computer", "attitude control", "propulsion system", "main structure", "power and radio electronics"];
+  const w = [A.cpu.risk, A.ad.risk, A.pr.risk, A.bus.risk, .02];
+  const ws = w.reduce((a, b) => a + b, 0);
+  for (let m = 1; m <= T; m++) {
+    const tm = t0 + m; let mod = 1, note = null;
+    if (m > A.lifeM) { fail = { cause: "End of life: " + A.lim, why: `The design was only built to last ${(A.lifeM / 12).toFixed(1)} years, limited by ${A.lim}.`, soft: 1 }; L(tm, "bad", `Month ${m}: end of life. ${A.lim[0].toUpperCase() + A.lim.slice(1)} finally limits the mission.`); break; }
+    const pm = 1 - Math.exp(-A.lam / 12 * ev * (1 + Math.max(0, 1 - A.batM) * 1.5));
+    if (rnd(seed, m, 1) < pm) {
+      let x = rnd(seed, m, 2) * ws, k = 0; while (k < 4 && x > w[k]) { x -= w[k]; k++; }
+      fail = { cause: "Spacecraft failure: " + sys[k], why: `Every part has some chance of failing each year. Together yours add up to roughly ${(A.lam * 100).toFixed(0)}% a year${A.red.hz === 1 ? ", and with single-string electronics any one failure is fatal. Redundancy would have cut that by 40–70%" : ""}.` };
+      L(tm, "bad", `Month ${m}: the ${sys[k]} fails and cannot be recovered.`); break;
+    }
+    if (rnd(seed, m, 3) < o.storm / 12 * ev) {
+      if (A.cpu.tol < 80) {
+        mod *= .5;
+        if (rnd(seed, m, 4) < .25 / A.shd.k) { fail = { cause: "Solar storm destroyed the computer", why: `A flare sent a stream of charged particles through a computer rated for only ${A.cpu.tol} krad. ${A.shd.k > 1 ? "Your shielding helped but was not enough." : "Shielding or a radiation-tolerant computer would have saved it."}` }; L(tm, "bad", `Month ${m}: a solar storm latches up the flight computer for good.`); break; }
+        note = [`Month ${m}: a solar storm resets the computer. Science is halved this month.`, "bad"];
+      } else if (A.powM < .15) { mod *= .7; note = [`Month ${m}: a solar storm dims the arrays; with so little power margin, instruments are throttled.`, "bad"]; }
+      else note = [`Month ${m}: a solar storm hits. Your ${A.cpu.n.toLowerCase()} and power margin ride it out.`, "good"];
+    }
+    if (A.ad.acc <= .1 && rnd(seed, m, 5) < .3 / 12 * ev) {
+      if (A.red.hz === 1 && rnd(seed, m, 6) < .5) { acc = Math.max(acc, 2); note = [`Month ${m}: a reaction wheel seizes. With no spare, fine pointing is gone for good.`, "bad"]; }
+      else note = [`Month ${m}: a reaction wheel shows a fault. The spare path takes over.`, "good"];
+    }
+    if (rnd(seed, m, 7) < o.deb / 12 * ev) {
+      if (rnd(seed, m, 8) < .35 / Math.sqrt(A.shd.k)) { fail = { cause: "Debris impact", why: `${A.o.n} has ${(o.deb * 100).toFixed(0)}% a year chance of a damaging strike. ${A.shd.k > 1 ? "Even your shielding could not stop this one." : "Shielding makes it much more survivable."}` }; L(tm, "bad", `Month ${m}: a piece of debris punches through the spacecraft.`); break; }
+      note = [`Month ${m}: a small fragment hits the craft but does no serious harm.`, "good"];
+    }
+    let dataMod = 1;
+    if (rnd(seed, m, 9) < .8 / 12 * ev) {
+      dataMod = A.gnd.cnt >= 3 ? .95 : .6;
+      note = [`Month ${m}: ground station outage. ${A.gnd.cnt >= 3 ? "Other stations pick up the passes." : "With a single station, a third of the data is delayed."}`, A.gnd.cnt >= 3 ? "good" : "bad"];
+    }
+    for (let i = alive.length - 1; i >= 0; i--) if (rnd(seed, m, 20 + i) < alive[i].risk / 12 * ev) { L(tm, "bad", `Month ${m}: the ${alive[i].n.toLowerCase()} fails.`); alive.splice(i, 1); }
+    if (note) L(tm, note[1], note[0]);
+    if (!alive.length) { fail = { cause: "All instruments lost", why: "Every science instrument failed. Carrying a second instrument for key goals gives a fallback." }; L(tm, "bad", `Month ${m}: no working instruments remain.`); break; }
+    const pUp = clamp(A.Gavg0 * Math.max(0, 1 - A.degr * m / 12) / A.load, 0, 1);
+    const battF = A.batM >= 1 ? 1 : .4 + .6 * A.batM;
+    const dd = dataRetOf(alive, A.dctx).ret * dataMod;
+    const s = sciOf(A.sc, alive, acc, A.pc.q) * A.fit * Math.min(1, dd) * A.dutyF * pUp * battF * mod;
+    cum += s / T; ops = m;
+    if (m === 1 || m % 12 === 0 || m === T) L(tm, "info", `Month ${m}: ${Math.round(cum * 100)}% of the mission’s science value delivered so far.`);
+  }
+  if (!fail && ops === T) L(t0 + T, "good", `Month ${T}: the primary mission is complete. ${A.lifeM > T * 1.3 ? "The spacecraft is still healthy; an extended mission is possible." : "Margins are used up; the team signs off."}`);
+  return finish();
+
+  function finish() {
+    const sci = launchOk ? cum : 0;
+    const monthsOps = launchOk ? ops : 0;
+    const sSci = 40 * sci;
+    const sSurv = launchOk ? 20 * Math.min(1, monthsOps / T) : 0;
+    const rs = A.reserve; const sbx = A.sandbox;
+    const eff = 15 * ((band(sbx ? .15 : rs, .08, .25) + band(A.massM, .06, .20) + band(A.powM, .08, .40) + Math.min(1, A.dataRet / .9)) / 4);
+    const reqs = [
+      ["Stays within budget", sbx || A.cost <= A.budget],
+      ["Rocket can deliver it to the right orbit", A.cap > 0 && A.launchMass <= A.cap && A.fit > 0],
+      [`Designed to last ${A.Ty.toFixed(1)} years`, A.lifeM >= T],
+      ["Covers every critical science goal well (60%+)", A.goals.filter(g => g.crit).every(g => g.q >= .6)],
+      ["Brings at least 80% of its data home", A.dataRet >= .8],
+      ["Launches on schedule", !missed && A.slack >= 0]
+    ];
+    const sReq = 15 * reqs.filter(r => r[1]).length / reqs.length;
+    const nBad = A.flags.filter(f => f.sev === "bad").length, nWarn = A.flags.filter(f => f.sev === "warn").length;
+    const integ = 1 - Math.min(1, (nBad * 1.5 + nWarn) / 5);
+    let tf = null, sCol;
+    if (team && team.members > 1) { tf = team.signed / team.members; sCol = 10 * (.5 * tf + .5 * integ); } else sCol = 10 * integ;
+    const total = Math.round(sSci + sSurv + eff + sReq + sCol);
+    const grade = total >= 85 ? "Flawless flight" : total >= 70 ? "Mission success" : total >= 50 ? "Partial success" : total >= 30 ? "Limping home" : "Mission lost";
+    return { log, launchOk, fail, science: sci, monthsOps, T, slip, missed, reqs, nBad, nWarn, integ, tf, scores: { sci: sSci, surv: sSurv, eff, req: sReq, col: sCol, total }, grade, completed: !fail && ops === T };
+  }
+}
+
+/* ---------- coaching ---------- */
+function lessons(D, A, R) {
+  const out = [];
+  const P = (pts, title, body) => out.push({ pts, title, body });
+  if (R.fail && R.fail.cause === "Launch failure") P(20, "Launch risk is real", R.fail.why + " Rerolling the dice (same design, new seed) will usually give a different result. A more reliable rocket costs more, so the trade is between budget and risk.");
+  else if (R.fail) P(40 * (1 - R.monthsOps / R.T) * .5 + 10, R.fail.cause, R.fail.why);
+  if (A.dataRet < .85 && A.dr.proc > 0) {
+    const lim = A.dl < A.dr.proc ? `Your link delivers about ${fmt(A.dl, 1)} GB/day but the instruments make ${fmt(A.dr.proc, 1)} GB/day after processing.` : `Storage of ${A.dctx.sto} GB is smaller than the ${fmt(A.dr.need, 0)} GB that piles up between contacts.`;
+    P(40 * (1 - A.dataRet) * A.sci0 * A.fit, "Data is the bottleneck", lim + " Throughput = antenna rate × distance loss × how long a ground station can see you. Fix the weakest link: a stronger antenna, a bigger ground network, on-board compression, or fewer data-hungry instruments.");
+  }
+  if (A.powM < .05 || A.batM < 1) P(12, "Power was tight", `The array averages ${fmt(A.GavgEOL)} W by end of life against ${fmt(A.load)} W of demand, and the battery covers ${Math.round(Math.min(A.batM, 9) * 100)}% of what each ${A.ecH.toFixed(1)}-hour eclipse needs. When power runs short the spacecraft switches instruments off. Instruments cost power; power costs array area, which costs mass and money.`);
+  if (A.fit < .6) P(40 * (1 - A.fit), "Wrong orbit for the job", `${A.o.n} is only ${Math.round(A.fit * 100)}% as useful for ${A.sc.n}. ${A.o.note}`);
+  const unc = A.goals.filter(g => g.q < .6).sort((a, b) => b.w - a.w)[0];
+  if (unc) P(40 * unc.w / 100 * (1 - unc.q) * A.fit, `“${unc.n}” was poorly covered`, `That goal is worth ${unc.w}% of the science. Its instrument must be suited to the measurement, and steady enough: instruments degrade when pointing is coarser than they need (currently ${A.acc}°).`);
+  if (A.lifeM < A.T) P(10 * (1 - A.lifeM / A.T), "The design would not last", `Estimated life was ${(A.lifeM / 12).toFixed(1)} years, limited by ${A.lim}, but the goal was ${A.Ty.toFixed(1)} years. Radiation, fuel, battery wear and solar-cell ageing each set a clock; the shortest one wins.`);
+  if (A.massM > .35) P(4, "Too much rocket", `You used only ${Math.round((1 - A.massM) * 100)}% of the launcher’s capacity. A smaller rocket would have saved money for instruments or reserve.`);
+  if (!A.sandbox && A.reserve < .05 && A.reserve >= 0) P(4, "No cushion", "A budget with almost no reserve cannot absorb the cost growth that nearly every real mission sees.");
+  if (A.red.hz === 1 && R.fail && /failure/.test(R.fail.cause)) P(8, "A single point of failure", "Cross-strapped or redundant electronics cost 6–14% more mass but cut random failures by 40–70%.");
+  if (R.missed) P(6, "Schedule slack saved nothing", "Your design left too little schedule slack. Simpler, more mature parts shorten development and make the launch window safer.");
+  if (R.tf !== null && R.tf < 1) P(5 * (1 - R.tf), "Not everyone signed off", "The team launched before every member approved the design. Integration reviews catch the problems nobody owns alone.");
+  if (!out.length) P(1, "Clean flight", "No major shortfalls. To push the score further, look for the cheapest way to add science or shed mass.");
+  return out.sort((a, b) => b.pts - a.pts).slice(0, 4);
+}
+
+function reportText(D, A, R, who) {
+  const L = [];
+  L.push(`# Mission report: ${A.sc.n}`, ``, `Crew: ${who}`, `Outcome: **${R.grade}** (${R.scores.total}/100)`, ``);
+  L.push(`## Design`, `- Orbit: ${A.o.n} (${A.o.alt})`, `- Launch vehicle: ${A.lv.n}, ${fmt(A.launchMass)} kg of ${fmt(A.cap)} kg capacity`, `- Spacecraft: ${A.bus.n}, ${(+D.area).toFixed(1)} m² ${A.cell.n}, ${fmt(D.wh)} Wh battery, ${A.ad.n}, ${A.pr.n}`, `- Instruments: ${A.insts.map(i => i.n).join(", ")}`, `- Comms: ${A.ant.n} with ${A.gnd.n}; ${A.pc.n}; ${D.sto} GB storage; ${D.duty}% duty cycle`, `- Cost: $${fmt(A.cost)}M of $${A.sandbox ? "unlimited" : fmt(A.budget) + "M"}`, `- Power: ${fmt(A.load)} W demand vs ${fmt(A.GavgEOL)} W end-of-life average`, `- Data: ${fmt(A.dr.proc, 1)} GB/day produced, ${fmt(A.dl, 1)} GB/day deliverable (${Math.round(A.dataRet * 100)}% returned)`, `- Estimated life: ${(A.lifeM / 12).toFixed(1)} years (limited by ${A.lim})`, ``);
+  L.push(`## Score`, `- Science: ${R.scores.sci.toFixed(1)}/40`, `- Survival: ${R.scores.surv.toFixed(1)}/20`, `- Resource efficiency: ${R.scores.eff.toFixed(1)}/15`, `- Requirements: ${R.scores.req.toFixed(1)}/15`, `- Integration & teamwork: ${R.scores.col.toFixed(1)}/10`, ``);
+  L.push(`## Flight log`, ...R.log.map(l => `- ${l.text}`), ``);
+  L.push(`## What to learn from this`, ...lessons(D, A, R).map(x => `- **${x.title}.** ${x.body}`));
+  return L.join("\n");
+}
+
+if (typeof module !== "undefined") module.exports = { ORB, LV, BUS, CELL, BAT, ADCS, PROP, CPU, RED, SHD, ANT, GND, PROC, STO, INST, SC, DF, DEFAULTS, STARTERS, analyze, simulate, lessons, reportText, flatten, cleanGroup, rnd, fmt };
+
+</script>
+<script>
+"use strict";
+const $ = (s, e = document) => e.querySelector(s), $$ = (s, e = document) => [...e.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ROLES = {
+  lead: { n: "Mission Lead", s: "Mission", d: "Sets the objective, orbit and rocket, and guards the budget." },
+  eng: { n: "Spacecraft Engineer", s: "Spacecraft", d: "Builds the craft: power, pointing, propulsion, computer and protection." },
+  sci: { n: "Science Lead", s: "Science", d: "Picks the instruments and decides what the mission measures." },
+  com: { n: "Comms & Ops", s: "Comms & Ops", d: "Gets the data home: antenna, ground stations, processing and duty cycle." }
+};
+const RK = ["lead", "eng", "sci", "com"];
+const PAL = ["#C9400C", "#128A7C", "#3465A8", "#B58500", "#7C4DCC", "#C2406F"];
+const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } } };
+
+/* ---------- state ---------- */
+const S = { screen: "lobby", mode: "solo", name: ls.get("perigee.name", ""), roles: RK.slice(), tab: "lead", room: null, code: "", peers: [], signed: "", note: "", noteT: 0, myL: null, followed: new Set(), joinT: 0, color: Math.floor(Math.random() * PAL.length), last: null, coach: true, rolesSet: false, roomApi: null };
+function freshG() { const g = {}; for (const r of [...RK, "x"]) g[r] = { t: 0, v: JSON.parse(JSON.stringify(DEFAULTS[r])) }; return g; }
+let G = freshG();
+const curD = () => flatten(G);
+let Ac = { k: "", A: null };
+function getA() { const D = curD(), k = JSON.stringify(D); if (Ac.k !== k) Ac = { k, A: analyze(D) }; return Ac.A; }
+const hashD = D => { const c = Object.assign({}, D); delete c.sd; const s = JSON.stringify(c); let h = 5381; for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return String(h); };
+const can = r => r === "x" || S.mode === "solo" || S.roles.includes(r);
+function toast(m) { const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove("on"), 2600); }
+function setHTML(el, html) { if (!el) return; if (el._h !== html) { el.innerHTML = html; el._h = html; } }
+
+/* ---------- team plumbing ---------- */
+function pub() { if (!S.room) return; S.room.presence({ n: S.name, r: S.roles, g: G, sg: S.signed, L: S.myL, k: S.note, kt: S.noteT, c: S.color }).catch(() => { }); }
+function viewers() { return S.peers.filter(p => p.kind === "viewer"); }
+function pname(p) { return (p.presence && typeof p.presence.n === "string" && p.presence.n.trim()) ? p.presence.n.slice(0, 16) : "Player"; }
+function onPeers(ch) {
+  S.peers = ch.peers.slice();
+  let changed = false;
+  for (const p of ch.peers) {
+    if (p.isMe || !p.presence || !p.presence.g || typeof p.presence.g !== "object") continue;
+    for (const r of [...RK, "x"]) {
+      const q = p.presence.g[r];
+      if (q && typeof q.t === "number" && q.t > G[r].t) { const v = r === "x" ? { sd: clamp(+((q.v || {}).sd) || 1, 1, 999999) } : cleanGroup(r, q.v); if (v) { G[r] = { t: q.t, v }; changed = true; } }
+    }
+    const Lp = p.presence.L;
+    if (Lp && typeof Lp.t === "number" && !S.followed.has(Lp.t)) {
+      S.followed.add(Lp.t);
+      if (S.armed && S.screen !== "lobby") startFlight(Lp, pname(p));
+    }
+  }
+  if (changed) pub();
+  if (!S.rolesSet && Date.now() - S.joinT > 1400) assignRoles();
+  if (S.screen === "work") { if (changed && !(document.activeElement && document.activeElement.type === "range")) renderPanel(); else renderLive(); }
+}
+function assignRoles() {
+  if (S.rolesSet || !S.room) return; S.rolesSet = true;
+  for (const p of S.peers) if (p.presence && p.presence.L && typeof p.presence.L.t === "number") S.followed.add(p.presence.L.t);
+  S.armed = true;
+  const taken = new Set(); for (const p of S.peers) if (!p.isMe && p.presence && Array.isArray(p.presence.r)) p.presence.r.forEach(r => taken.add(r));
+  const free = RK.find(r => !taken.has(r)); S.roles = [free || "lead"]; S.tab = S.roles[0]; pub();
+  if (S.screen === "work") renderPanel();
+}
+async function enterTeam(code) {
+  try {
+    if (typeof claude === "undefined") throw 0;
+    const room = S.roomApi || (S.roomApi = await claude.use("room"));
+    if (!room) throw 0;
+    S.mode = "team"; S.code = code; S.joinT = Date.now(); S.rolesSet = false; S.armed = false; S.followed = new Set(); G = freshG(); S.signed = ""; S.myL = null; S.roles = []; S.tab = "lead";
+    S.room = await room.join("pg-" + code.toLowerCase());
+    S.room.onPeers(onPeers, () => { });
+    S.screen = "work"; renderAll(); pub();
+    setTimeout(assignRoles, 1600);
+    setTimeout(() => { if (S.room && S.peers.length > 4) { toast("That team already has four players."); leaveTeam(); } }, 1800);
+  } catch (e) { S.mode = "solo"; S.room = null; toast("Team rooms are not available in this view. You can still fly solo."); renderAll(); }
+}
+async function leaveTeam() { try { if (S.room) await S.room.leave(); } catch (e) { } S.room = null; S.mode = "solo"; S.peers = []; S.roles = RK.slice(); G = freshG(); S.screen = "lobby"; renderAll(); }
+function newCode() { const a = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s = ""; for (let i = 0; i < 4; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
+
+/* ---------- edits ---------- */
+function setVal(k, v, live) {
+  const role = KEYROLE[k];
+  if (!can(role)) { toast(`${ROLES[role].n} owns that control. Send them a note.`); return; }
+  const nv = Object.assign({}, G[role].v, { [k]: k === "sto" ? +v : v });
+  if (k === "sc") { nv.orb = SC[v].sug; }
+  G[role] = { t: Date.now(), v: nv }; pub();
+  live ? renderLive() : renderAll();
+}
+function toggleInst(id) {
+  if (!can("sci")) { toast(`${ROLES.sci.n} owns the instruments.`); return; }
+  const l = G.sci.v.inst.slice(), i = l.indexOf(id);
+  if (i >= 0) l.splice(i, 1); else { if (l.length >= 6) { toast("A spacecraft can carry at most six instruments."); return; } l.push(id); }
+  G.sci = { t: Date.now(), v: { inst: l } }; pub(); renderAll();
+}
+function loadDesign(D, quiet, force) {
+  for (const r of RK) { if (!force && !can(r) && S.mode === "team") continue; G[r] = { t: Date.now(), v: cleanGroup(r, D) }; }
+  pub(); renderAll(); if (!quiet) toast("Design loaded.");
+}
+function loadStarter() {
+  const sid = G.lead.v.sc, st = STARTERS[sid]; const D = {};
+  for (const r of RK) Object.assign(D, DEFAULTS[r], st[r]);
+  D.df = G.lead.v.df; loadDesign(D, true, true); toast("Starter design loaded. Everyone can fine-tune their own area.");
+}
+const encode = D => "PG1." + btoa(unescape(encodeURIComponent(JSON.stringify(D))));
+function decode(s) { try { s = s.trim(); if (!s.startsWith("PG1.")) return null; const o = JSON.parse(decodeURIComponent(escape(atob(s.slice(4))))); const D = {}; for (const r of RK) Object.assign(D, cleanGroup(r, o)); return D; } catch (e) { return null; } }
+
+/* ---------- figure: spacecraft ---------- */
+function craftSVG(D, A, big) {
+  const W = 420, H = 300, cx = 210, cy = 132;
+  const bw = { micro: 46, small: 76, med: 106, large: 138 }[D.bus], bh = { micro: 46, small: 62, med: 84, large: 106 }[D.bus];
+  const ww = clamp(Math.sqrt(D.area) * 24, 4, 150), wh = bh * .8, x0 = cx - bw / 2, y0 = cy - bh / 2;
+  const wc = D.cell === "ga" ? "var(--wingGa)" : "var(--wingSi)";
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Schematic of your spacecraft: ${esc(A.bus.n)}, ${(+D.area).toFixed(1)} square metres of solar array, ${A.insts.length} instruments" style="width:100%;height:auto;color:var(--ink)" fill="none" stroke="currentColor" stroke-width="1.2">`;
+  s += `<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="currentColor" stroke-width=".6" opacity=".5"/></pattern></defs>`;
+  // wings
+  for (const sd of [-1, 1]) {
+    const xa = sd < 0 ? x0 - ww - 8 : x0 + bw + 8;
+    s += `<line x1="${sd < 0 ? x0 : x0 + bw}" y1="${cy}" x2="${sd < 0 ? x0 - 8 : x0 + bw + 8}" y2="${cy}"/>`;
+    s += `<rect x="${xa}" y="${cy - wh / 2}" width="${ww}" height="${wh}" fill="${wc}" fill-opacity=".38"/>`;
+    const n = Math.max(1, Math.round(ww / 18)); for (let i = 1; i < n; i++) s += `<line x1="${xa + ww * i / n}" y1="${cy - wh / 2}" x2="${xa + ww * i / n}" y2="${cy + wh / 2}" stroke-width=".6"/>`;
+    s += `<line x1="${xa}" y1="${cy}" x2="${xa + ww}" y2="${cy}" stroke-width=".6"/>`;
+  }
+  // shield
+  if (D.shd !== "none") s += `<rect x="${x0 - 6}" y="${y0 - 6}" width="${bw + 12}" height="${bh + 12}" stroke-dasharray="${D.shd === "heavy" ? "0" : "5 3"}" stroke-width="${D.shd === "heavy" ? 3 : 1.4}" rx="2"/>`;
+  s += `<rect x="${x0}" y="${y0}" width="${bw}" height="${bh}" fill="var(--pane2)" stroke-width="1.8"/><rect x="${x0}" y="${y0}" width="${bw}" height="${bh}" fill="url(#hatch)" stroke="none" opacity=".35"/>`;
+  // battery
+  const bf = clamp(A.batM, 0, 1.6) / 1.6, bc = A.batM < 1 ? "var(--bad)" : "var(--ok)";
+  s += `<rect x="${x0 + 8}" y="${y0 + bh - 18}" width="${Math.min(40, bw - 16)}" height="9" stroke-width="1"/><rect x="${x0 + 9}" y="${y0 + bh - 17}" width="${Math.max(1, (Math.min(40, bw - 16) - 2) * bf)}" height="7" fill="${bc}" stroke="none"/>`;
+  // adcs
+  const nw = D.adcs === "cmg" ? 4 : D.adcs === "wh" ? 3 : 0, r = D.adcs === "cmg" ? 5.5 : 4.5;
+  for (let i = 0; i < nw; i++) s += `<circle cx="${x0 + 14 + i * (r * 2 + 4)}" cy="${y0 + 15}" r="${r}"/>`;
+  if (D.adcs === "mag") s += `<path d="M${x0 + 8} ${y0 + 10}h22v10h-22z M${x0 + 12} ${y0 + 10}v10 M${x0 + 16} ${y0 + 10}v10 M${x0 + 20} ${y0 + 10}v10 M${x0 + 24} ${y0 + 10}v10" stroke-width=".8"/>`;
+  // redundancy
+  if (D.red !== "single") s += `<rect x="${x0 + bw - 28}" y="${y0 + 8}" width="20" height="13" stroke-dasharray="3 2"/><text x="${x0 + bw - 18}" y="${y0 + 18}" font-size="8" text-anchor="middle" fill="currentColor" stroke="none">${D.red === "full" ? "2×" : "X"}</text>`;
+  // antenna
+  const ty = y0;
+  if (D.ant === "uhf") s += `<line x1="${cx}" y1="${ty}" x2="${cx}" y2="${ty - 30}"/><circle cx="${cx}" cy="${ty - 31}" r="2" fill="currentColor"/>`;
+  else if (D.ant === "s") s += `<rect x="${cx - 11}" y="${ty - 6}" width="22" height="6" fill="var(--pane)"/>`;
+  else if (D.ant === "xm") s += `<path d="M${cx - 6} ${ty}L${cx - 14} ${ty - 22}h28L${cx + 6} ${ty}z" fill="var(--pane)"/>`;
+  else { const R = D.ant === "ka" ? 34 : 25; s += `<line x1="${cx}" y1="${ty}" x2="${cx}" y2="${ty - R * .7}"/><path d="M${cx - R} ${ty - R * .9}Q${cx} ${ty - R * 1.55} ${cx + R} ${ty - R * .9}" stroke-width="2.2"/><circle cx="${cx}" cy="${ty - R * 1.05}" r="2" fill="currentColor"/>`; }
+  // propulsion
+  const px = x0 + bw - 14, py = y0 + bh;
+  if (D.prop === "cold") s += `<circle cx="${px}" cy="${py + 3}" r="2"/><circle cx="${px - 8}" cy="${py + 3}" r="2"/>`;
+  else if (D.prop === "mono" || D.prop === "bi") s += `<path d="M${px - 5} ${py}L${px - 9} ${py + 14}h18L${px + 5} ${py}z" fill="var(--pane)"/>`;
+  else if (D.prop === "hall") s += `<circle cx="${px}" cy="${py + 8}" r="8" fill="var(--acc)" fill-opacity=".35"/><circle cx="${px}" cy="${py + 8}" r="3"/>`;
+  // instruments (nadir)
+  const n = A.insts.length, sz = n > 4 ? 15 : 19, room = bw - 34;
+  A.insts.forEach((it, i) => {
+    const gap = n > 1 ? Math.min(sz + 5, (room - sz) / (n - 1)) : 0, ix = x0 + 6 + i * gap;
+    s += `<rect x="${ix}" y="${py + 2}" width="${sz}" height="${sz}" fill="var(--pane)"/><text x="${ix + sz / 2}" y="${py + 2 + sz / 2 + 3}" font-size="7.5" text-anchor="middle" fill="currentColor" stroke="none">${it.c}</text>`;
+  });
+  // dimension lines
+  const ya = H - 40, xl = x0 - ww - 8, xr = x0 + bw + ww + 8;
+  s += `<g stroke-width=".8"><line x1="${xl}" y1="${ya}" x2="${xr}" y2="${ya}"/><line x1="${xl}" y1="${ya - 5}" x2="${xl}" y2="${ya + 5}"/><line x1="${xr}" y1="${ya - 5}" x2="${xr}" y2="${ya + 5}"/><line x1="${xl}" y1="${cy + wh / 2 + 3}" x2="${xl}" y2="${ya - 6}" stroke-dasharray="2 3"/><line x1="${xr}" y1="${cy + wh / 2 + 3}" x2="${xr}" y2="${ya - 6}" stroke-dasharray="2 3"/></g>`;
+  s += `<text x="${cx}" y="${ya - 5}" font-size="9.5" text-anchor="middle" fill="currentColor" stroke="none">array ${(+D.area).toFixed(1)} m² · ${fmt(A.G * (1 - A.o.ecl))} W average</text>`;
+  s += `<rect x="6" y="${H - 28}" width="${W - 12}" height="22" stroke-width=".8"/><text x="12" y="${H - 13}" font-size="9.5" fill="currentColor" stroke="none">${esc(A.bus.n)} · ${fmt(A.launchMass)} kg at launch · ${fmt(A.load)} W</text>`;
+  return s + `</svg>`;
+}
+/* ---------- figure: orbit ---------- */
+function orbitSVG(D, A) {
+  const o = A.o, W = 420, H = 230, cx = 210, cy = 112;
+  const bodyR = { earth: 40, moon: 24, mars: 30 }[o.body], rr = { leo: bodyR + 13, sso: bodyR + 26, meo: 78, geo: 98, lun: bodyR + 18, mar: bodyR + 20 }[D.orb];
+  const bc = { earth: "var(--earth)", moon: "var(--moon)", mars: "var(--mars)" }[o.body];
+  const C = 2 * Math.PI * rr, ecl = o.ecl;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Orbit diagram: ${esc(o.n)} at ${esc(o.alt)}; the craft spends ${Math.round(ecl * 100)} percent of each lap in shadow" style="width:100%;height:auto;color:var(--ink)" fill="none" stroke="currentColor" stroke-width="1.2">`;
+  // sun
+  s += `<g stroke="var(--sunc)" stroke-width="2"><circle cx="22" cy="${cy}" r="9" fill="var(--sunc)"/>${[0, 1, 2, 3, 4].map(i => `<line x1="40" y1="${cy - 30 + i * 15}" x2="${cx - rr - 26}" y2="${cy - 30 + i * 15}" stroke-width=".8" stroke-dasharray="3 5"/>`).join("")}</g>`;
+  s += `<text x="22" y="${cy + 26}" font-size="9" text-anchor="middle" fill="currentColor" stroke="none">sunlight</text>`;
+  // shadow cone
+  s += `<path d="M${cx} ${cy - bodyR}L${W - 8} ${cy - bodyR - 4}V${cy + bodyR + 4}L${cx} ${cy + bodyR}z" fill="currentColor" fill-opacity=".07" stroke="none"/>`;
+  s += `<circle cx="${cx}" cy="${cy}" r="${rr}" stroke-dasharray="2 4" opacity=".7"/>`;
+  // eclipse arc: centered on right (angle 0)
+  s += `<circle cx="${cx}" cy="${cy}" r="${rr}" stroke="var(--acc)" stroke-width="4" stroke-dasharray="${ecl * C} ${C}" transform="rotate(${-ecl * 180} ${cx} ${cy})"/>`;
+  s += `<circle cx="${cx}" cy="${cy}" r="${bodyR}" fill="${bc}" stroke="currentColor"/>`;
+  if (o.body === "earth") s += `<path d="M${cx - 22} ${cy - 8}q8-12 20-6t4 14q-14 8-24-8zM${cx + 6} ${cy + 10}q10-4 16 4t-8 10q-10 0-8-14z" fill="var(--ok)" fill-opacity=".55" stroke="none"/>`;
+  if (o.body === "moon") s += `<circle cx="${cx - 7}" cy="${cy - 5}" r="4" stroke-width=".8"/><circle cx="${cx + 8}" cy="${cy + 7}" r="3" stroke-width=".8"/>`;
+  s += `<g id="satg"><rect id="sat" x="-5" y="-3" width="10" height="6" fill="var(--acc)" stroke="currentColor"/></g>`;
+  s += `<text x="${W - 8}" y="${cy - bodyR - 10}" font-size="9" text-anchor="end" fill="currentColor" stroke="none">shadow</text>`;
+  s += `<text x="8" y="${H - 34}" font-size="10.5" fill="currentColor" stroke="none" font-weight="500">${esc(o.n)} · ${esc(o.alt)}</text>`;
+  s += `<text x="8" y="${H - 19}" font-size="9.5" fill="currentColor" stroke="none">one lap ${o.per < 3 ? Math.round(o.per * 60) + " min" : o.per + " h"} · ${Math.round(ecl * 100)}% in shadow · ${o.dist < 1 ? "far from home" : "close to home"}</text>`;
+  return s + `<text x="8" y="${H - 5}" font-size="9" fill="var(--mute)" stroke="none">not to scale</text></svg>`;
+}
+let satAng = 0, satR = 60, satCX = 210, satCY = 112, satSpeed = .6;
+function satLoop(t) {
+  const g = document.getElementById("sat");
+  if (g) { const sp = (matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : satSpeed); satAng += sp * .01; g.setAttribute("transform", `translate(${satCX + satR * Math.cos(satAng)} ${satCY + satR * Math.sin(satAng)})`); }
+  requestAnimationFrame(satLoop);
+}
+function setOrbitGeom(D) {
+  const o = ORB[D.orb], bodyR = { earth: 40, moon: 24, mars: 30 }[o.body];
+  satR = { leo: bodyR + 13, sso: bodyR + 26, meo: 78, geo: 98, lun: bodyR + 18, mar: bodyR + 20 }[D.orb];
+  satSpeed = { leo: 1.7, sso: 1.5, meo: .6, geo: .22, lun: 1.4, mar: 1.3 }[D.orb];
+}
+
+/* ---------- meters ---------- */
+function meters(A, D) {
+  const st = r => r > 1 ? "bad" : r > .9 ? "warn" : "ok", tag = { ok: "OK", warn: "TIGHT", bad: "OVER" };
+  const M = [];
+  const rM = A.cap > 0 ? A.launchMass / A.cap : 2;
+  M.push(["Mass", `${fmt(A.launchMass)} / ${A.cap ? fmt(A.cap) : "—"} kg`, rM, A.cap ? `${Math.round(A.massM * 100)}% margin on ${A.lv.n.split(" ")[0]}; ${fmt(A.prop)} kg of that is propellant` : "this rocket can’t reach the orbit"]);
+  M.push(["Power", `${fmt(A.load)} / ${fmt(A.GavgEOL)} W`, A.GavgEOL > 0 ? A.load / A.GavgEOL : 2, `needed vs made at end of life; battery ${A.batM >= 9 ? "n/a" : Math.round(A.batM * 100) + "% of eclipse need"}`]);
+  M.push(["Budget", A.sandbox ? `$${fmt(A.cost)}M · no limit` : `$${fmt(A.cost)} / ${fmt(A.budget)}M`, A.sandbox ? .5 : A.cost / A.budget, A.sandbox ? "sandbox: money is no object" : `${Math.round(A.reserve * 100)}% reserve after launch & ${A.Ty.toFixed(1)} yr of operations`]);
+  M.push(["Data", `${fmt(A.dr.proc, 1)} GB/day`, A.dr.need > 0 ? A.dr.need / D.sto : 0, `produced; storage ${D.sto} GB vs ~${fmt(A.dr.need)} GB needed`]);
+  M.push(["Comms", `${fmt(Math.min(A.dl, 99999), 1)} GB/day`, A.dr.proc > 0 && A.dl > 0 ? A.dr.proc / A.dl : 2, `${Math.round(A.dataRet * 100)}% of data returned · ${Math.round(A.contact * 100)}% ground contact`]);
+  M.push(["Time", `${fmt(A.devM)}/${A.sc.win >= 999 ? "—" : A.sc.win} mo · ${(A.lifeM / 12).toFixed(1)}/${A.Ty.toFixed(1)} yr`, Math.max(A.devM / A.sc.win, A.lifeM > 0 ? A.T / A.lifeM : 2), `build vs launch window · life vs goal (limit: ${A.lim})`]);
+  return M.map(([l, v, r, c]) => { const k = st(r); return `<div class="meter ${k}"><div class="l"><span>${l}</span><span>${tag[k]}</span></div><div class="v">${v}</div><div class="bar" aria-hidden="true"><i style="width:${Math.min(100, r / 1.25 * 100)}%"></i><b style="left:80%"></b></div><div class="c">${c}</div></div>`; }).join("");
+}
+
+/* ---------- panels ---------- */
+function opts(k, T, stat, cur, D, filter) {
+  return `<div class="opts">` + Object.entries(T).filter(([id, x]) => (!x.adv || DF[D.df].adv || cur === id) && (!filter || filter(id, x) !== null)).map(([id, x]) => {
+    const f = filter ? filter(id, x) : "";
+    return `<button type="button" class="opt" data-k="${k}" data-v="${id}" aria-pressed="${cur === id}" ${f === "off" ? "disabled" : ""}><b>${esc(x.n)}</b><span class="st">${stat(x)}</span>${x.d || x.t || x.blurb ? `<span class="ds">${esc(x.d || x.t || x.blurb)}</span>` : ""}${x.adv ? `<span class="tagline">Advanced part: longer to build, higher risk</span>` : ""}</button>`;
+  }).join("") + `</div>`;
+}
+function sec(title, why, body, extra) { return `<div class="sec"><h3>${title}${extra || ""}</h3>${why ? `<p class="why">${why}</p>` : ""}${body}</div>`; }
+function slider(k, label, min, max, step, val, why) { return `<div class="sec"><div class="sl"><label for="s_${k}">${label}</label><output data-out="${k}">${outText(k, val)}</output><input id="s_${k}" type="range" data-k="${k}" min="${min}" max="${max}" step="${step}" value="${val}"></div>${why ? `<p class="why">${why}</p>` : ""}</div>`; }
+function outText(k, v) { return k === "area" ? (+v).toFixed(1) + " m²" : k === "wh" ? fmt(v) + " Wh" : v + "%"; }
+const lvl = r => r < 5 ? "low" : r < 15 ? "moderate" : r < 40 ? "high" : "severe";
+
+function roleHead(r) {
+  const owners = viewers().filter(p => p.presence && Array.isArray(p.presence.r) && p.presence.r.includes(r) && !p.isMe);
+  const mine = can(r);
+  let who = "";
+  if (S.mode === "team") who = mine ? `<span class="chip">You’re covering this${owners.length ? " with " + owners.map(p => esc(pname(p))).join(", ") : ""}</span>` : (owners.length ? `<span class="chip">${owners.map(p => esc(pname(p))).join(", ")} ${owners.length > 1 ? "are" : "is"} covering this</span>` : `<span class="chip">Nobody is covering this yet. Claim it above.</span>`);
+  return `<div class="role ${mine ? "" : "locked"}"><b>${ROLES[r].n}</b><span class="small mute">${ROLES[r].d}</span>${who}</div>`;
+}
+function panelHTML() {
+  const D = curD(), r = S.tab, A = getA(), dis = can(r) ? "" : "disabled";
+  let b = "";
+  if (r === "lead") {
+    b += sec("Mission", "Every mission starts with a question to answer. Pick the one you want to solve; it sets the budget, deadline, science goals and which orbit makes sense.",
+      `<div class="opts">` + Object.entries(SC).map(([id, x]) => `<button type="button" class="opt" data-k="sc" data-v="${id}" aria-pressed="${D.sc === id}"><b>${esc(x.n)}</b><span class="st">${esc(x.kind)} · ${x.budget >= 1e6 ? "no budget limit" : "$" + Math.round(x.budget * DF[D.df].bm) + "M"} · ${x.win >= 999 ? "no deadline" : x.win + " mo to launch"}</span><span class="ds">${esc(x.blurb)}</span></button>`).join("") + `</div>`)
+      + `<div class="row"><button type="button" class="btn" data-act="starter">Load a starter design for this mission</button><span class="small mute">Fills in every area with a workable first draft to improve on.</span></div>`;
+    b += sec("Difficulty", "Cadet hides advanced parts and forgives mistakes. Chief engineer cuts the budget and makes things go wrong more often.", opts("df", DF, x => `budget ×${x.bm} · surprises ×${x.ev}`, D.df, D));
+    b += sec("What success looks like", `Science goals are worth a share of the mission’s value. Goals marked <b>must-have</b> are required to count as meeting the mission’s requirements. The mission must last ${A.Ty.toFixed(1)} years.`,
+      `<div class="goals">` + A.sc.goals.map(g => `<div class="goal"><span>${esc(g.n)}${g.crit ? ' <span class="chip">must-have</span>' : ""}</span><span class="small mute">worth ${g.w}%</span><span></span></div>`).join("") + `</div>`);
+    b += sec("Orbit", "Where you fly decides what you can see, how long you can talk to home, how hot, shadowed and irradiated the spacecraft gets, and how much fuel it takes to get there.",
+      opts("orb", ORB, x => `${x.alt} · lap ${x.per < 3 ? Math.round(x.per * 60) + " min" : x.per + " h"} · shadow ${Math.round(x.ecl * 100)}% · radiation ${lvl(x.rad)}`, D.orb, D)) + `<div class="read" data-live="orbfit"></div>`;
+    b += sec("Launch vehicle", "The rocket sets how much mass you can deliver to your orbit, what it costs, and the chance it reaches space. Bigger rockets cost more, which leaves less for the spacecraft.",
+      opts("lv", LV, x => `$${x.cost}M · ${(x.rel * 100).toFixed(0)}% reliable · ${x.cap[D.orb] ? "up to " + fmt(x.cap[D.orb]) + " kg here" : "can’t reach this orbit"}`, D.lv, D, (id, x) => x.cap[D.orb] ? "" : ""));
+  }
+  if (r === "eng") {
+    b += sec("Bus (structure)", "The bus is the skeleton that everything bolts to. A bigger bus holds more instruments and array, but weighs and costs more and takes longer to build.", opts("bus", BUS, x => `${x.m} kg · carries ${x.pl} kg · ${x.area} m² array max · $${x.cost}M · ${x.dev} mo`, D.bus, D));
+    b += sec("Solar cells", "Sunlight is your only power source. Better cells make more watts from each square metre, so you need less array mass, but they cost much more.", opts("cell", CELL, x => `${Math.round(x.eff * 100)}% efficient · ${x.kg} kg/m² · $${x.cost}M/m²`, D.cell, D));
+    b += slider("area", "Array area", .1, 40, .1, D.area, "More area, more power, more mass and cost. Farther from the Sun (Mars gets 43% of Earth’s sunlight) you need much more.") + `<div class="read" data-live="power"></div>`;
+    b += sec("Battery type", "Batteries carry the craft through eclipse, when Earth or the Moon blocks the Sun.", opts("bat", BAT, x => `${x.wk} Wh/kg · ${fmt(x.cl)} charge cycles`, D.bat, D));
+    b += slider("wh", "Battery capacity", 0, 9000, 50, D.wh, "Too small and the craft browns out in every eclipse. Too big is dead weight. Deep daily discharge also wears batteries out sooner.") + `<div class="read" data-live="bat"></div>`;
+    b += sec("Attitude control (pointing)", "Instruments and antennas have to point at the right spot. Steadier pointing costs mass, power and money. If it is not steady enough, data quality and link speed drop.", opts("adcs", ADCS, x => `${x.acc}° · ${x.m} kg · ${x.p} W · $${x.cost}M`, D.adcs, D));
+    b += sec("Propulsion", "Engines move the craft into orbit and keep it there. More efficient engines need less propellant, but the rocket equation punishes heavy craft: fuel itself needs fuel to lift.", opts("prop", PROP, x => `${x.isp ? "Isp " + x.isp + " s" : "no thrust"} · ${x.m} kg · $${x.cost}M`, D.prop, D))
+      + slider("pm", "Propellant margin", 0, 100, 5, D.pm, "Extra fuel beyond the minimum for orbit entry and your mission length.") + `<div class="read" data-live="prop"></div>`;
+    b += sec("Flight computer", "The computer runs the spacecraft. Radiation flips bits and ages chips, so tougher computers cost more but last longer in harsh orbits.", opts("cpu", CPU, x => `${x.tol} krad · ${x.m} kg · ${x.p} W · $${x.cost}M`, D.cpu, D));
+    b += sec("Redundancy", "Spare units cut random failures at a cost in mass and money. Missions far from home carry more of them because nobody can repair anything.", opts("red", RED, x => `mass ×${x.mm} · cost ×${x.cm} · failures ×${x.hz}`, D.red, D));
+    b += sec("Radiation shielding", "Metal shielding soaks up charged particles. It matters most in the Van Allen belts (medium Earth orbit) and in geostationary orbit.", opts("shd", SHD, x => `mass +${Math.round(x.mp * 100)}% · tolerance ×${x.k} · $${x.cost}M`, D.shd, D));
+  }
+  if (r === "sci") {
+    b += sec("Goal coverage", "Each goal needs an instrument that measures it. The bars show how well your current set covers each goal after pointing, orbit and data limits are considered.", `<div class="goals" data-live="goals"></div>`);
+    b += sec("Instruments", "Every instrument adds science and also mass, power, cost and a stream of data. Add one and watch the other resources move.", `<div class="read" data-live="inst"></div>` +
+      `<div class="opts">` + Object.entries(INST).filter(([id, x]) => !x.adv || DF[D.df].adv || D.inst.includes(id)).map(([id, x]) => `<button type="button" class="opt" data-act="inst" data-id="${id}" aria-pressed="${D.inst.includes(id)}"><b>${esc(x.n)}</b><span class="st">${x.m} kg · ${x.p} W · $${x.cost}M · ${x.d} GB/day · needs ${x.pt}°</span><span class="ds">${esc(x.t)}</span>${x.adv ? `<span class="tagline">Advanced part</span>` : ""}</button>`).join("") + `</div>`);
+  }
+  if (r === "com") {
+    b += sec("Antenna", "Antenna choice sets the data rate. Rate falls steeply with distance, and dishes need steady pointing. Rates shown are from low Earth orbit; farther away they drop.", opts("ant", ANT, x => `${x.rate} Mbit/s · ${x.m} kg · ${x.p} W · $${x.cost}M`, D.ant, D));
+    b += sec("Ground network", "Your spacecraft can only transmit while a ground station can see it. More stations means more minutes of contact each day, at a yearly cost.", opts("gnd", GND, x => `${x.cnt} station${x.cnt > 1 ? "s" : ""} · $${x.cy}M/yr`, D.gnd, D, (id, x) => x.min && A.o.tier < x.min ? "off" : ""));
+    b += sec("On-board processing", "Processing data before sending it saves downlink, at a cost in power and a little completeness.", opts("proc", PROC, x => `data ×${x.f} · ${x.p} W · $${x.cost}M`, D.proc, D));
+    b += sec("On-board storage", "Data is stored until the next ground contact. Too little storage and data is overwritten.", `<div class="opts">` + STO.map(g => `<button type="button" class="opt" data-k="sto" data-v="${g}" aria-pressed="${D.sto === g}"><b>${g} GB</b><span class="st">${STOM[g]} kg · $${STOC[g]}M</span></button>`).join("") + `</div>`);
+    b += slider("duty", "Science duty cycle", 10, 100, 5, D.duty, "How much of the time the instruments are switched on. More means more science, more data and more power, with diminishing returns.") + `<div class="read" data-live="duty"></div><div class="read" data-live="link"></div>`;
+  }
+  return `<div data-live="rolehead"></div><fieldset class="ctl" ${dis}>${b}</fieldset>`;
+}
+const LIVE = {
+  rolehead: () => roleHead(S.tab),
+  orbfit: (A, D) => `${esc(A.o.note)}<br>Fit for this mission: <b>${A.fit >= .95 ? "best choice" : A.fit > 0 ? Math.round(A.fit * 100) + "% as useful as the best orbit" : "cannot do this mission"}</b> · Orbit entry burn needed: ${fmt(A.o.dvI)} m/s · Station-keeping: ${A.o.dvY} m/s per year`,
+  power: A => `Sunlit output ${fmt(A.G)} W · averages ${fmt(A.Gavg0)} W with ${Math.round(A.o.ecl * 100)}% shadow · ${fmt(A.GavgEOL)} W after ${A.Ty.toFixed(1)} years of ageing<br>Craft needs ${fmt(A.load)} W · array limit for this bus: ${A.bus.area} m²${A.o.flux < 1000 ? " · sunlight here is only " + Math.round(A.o.flux / 1361 * 100) + "% of Earth’s" : ""}`,
+  bat: A => `Needs about ${fmt(A.batReq)} Wh to ride through a ${A.ecH.toFixed(2)} h eclipse at 35% depth of discharge · you have ${Math.round(Math.min(A.batM, 99) * 100)}% of that · wear-out life ≈ ${A.batLifeY.toFixed(1)} years`,
+  prop: (A, D) => A.pr.isp ? `Entry burn ${fmt(A.o.dvI)} m/s + ${fmt(A.o.dvY * A.Ty)} m/s upkeep = ${fmt(A.dvTot)} m/s · propellant ${fmt(A.prop)} kg · fuel for upkeep lasts ${A.propLifeY.toFixed(1)} years${A.transferM ? " · electric transfer takes about " + Math.round(A.transferM) + " months" : ""}` : `No engine. ${A.o.dvI ? "This orbit needs a braking burn, so this will not work." : "Without upkeep burns the orbit decays in about " + A.propLifeY.toFixed(1) + " years."}`,
+  goals: A => A.goals.map(g => `<div class="goal"><span>${esc(g.n)}${g.crit ? ' <span class="chip">must-have</span>' : ""}</span><div class="bar" aria-hidden="true"><i style="width:${Math.round(g.q * 100)}%"></i></div><span class="mono">${Math.round(g.q * 100)}% of ${g.w}</span></div>`).join(""),
+  inst: A => `${A.insts.length}/6 instruments · ${fmt(A.instM)} of ${A.bus.pl} kg the bus can carry · ${fmt(A.instP)} W average · ${fmt(A.dr.raw, 1)} GB/day raw · $${fmt(A.instCost)}M`,
+  duty: A => `Instruments draw ${fmt(A.instP)} W and produce ${fmt(A.dr.raw, 1)} GB/day raw (${fmt(A.dr.proc, 1)} after processing). Science scales as duty^0.6: ${Math.round(A.dutyF * 100)}% of the potential.`,
+  link: A => `Link: ${A.ant.rate} Mbit/s base × ${A.o.dist < 1 ? "distance loss ×" + A.o.dist : "no distance loss"} × station gain ×${A.gnd.rm} × pointing ×${A.pointF.toFixed(2)} = <b>${fmt(A.rate, A.rate < 10 ? 2 : 0)} Mbit/s</b> · contact ${Math.round(A.contact * 100)}% of the day → <b>${fmt(Math.min(A.dl, 99999), 1)} GB/day</b> home`
+};
+const SEVL = { block: "Blocks launch", bad: "Serious", warn: "Check" };
+function reviewHTML(A) {
+  const fl = A.flags.slice().sort((a, b) => ["block", "bad", "warn"].indexOf(a.sev) - ["block", "bad", "warn"].indexOf(b.sev));
+  return `<h3>Design review</h3>` + (fl.length ? `<ul>${fl.slice(0, 9).map(f => `<li class="${f.sev}"><span class="sev">${SEVL[f.sev]}</span><span>${esc(f.msg)}<span class="who">${ROLES[f.owner].s}</span></span>${f.fix ? `<span class="fix">${esc(f.fix)}</span>` : ""}</li>`).join("")}${fl.length > 9 ? `<li><span class="sev"></span><span class="mute">…and ${fl.length - 9} more</span></li>` : ""}</ul>` : `<p class="clear" style="margin-top:6px">All checks pass. Nothing left for the review board to flag.</p>`);
+}
+function launchHTML(A) {
+  const team = S.mode === "team", h = hashD(curD());
+  const members = viewers(), signed = members.filter(p => p.presence && p.presence.sg === h).length;
+  const nb = A.flags.filter(f => f.sev === "block").length;
+  return `<div class="row"><b>Launch</b><span class="small mute">${nb ? `${nb} issue${nb > 1 ? "s" : ""} block launch. Resolve ${nb > 1 ? "them" : "it"} in the review above.` : `Cleared for launch. Dice #${G.x.v.sd}: the same number always gives the same random events, so you can compare designs fairly.`}</span></div>
+  <div class="row">${team ? `<button class="btn" type="button" data-act="sign" aria-pressed="${S.signed === h}">${S.signed === h ? "✓ You signed off (tap to withdraw)" : "Sign off this design"}</button><span class="small">${signed} of ${members.length} signed off</span>` : ""}
+  <button class="btn pri" type="button" data-act="launch" ${nb ? "disabled" : ""}>Launch mission</button>
+  <button class="btn" type="button" data-act="reroll">Re-roll the dice</button><button class="btn" type="button" data-act="savelib">Save design</button></div>
+  ${team && signed < members.length && !nb ? `<p class="small mute">You can launch without everyone’s sign-off, but integration and teamwork points will be lower.</p>` : ""}`;
+}
+function tabsHTML() {
+  return RK.map(r => {
+    const own = viewers().filter(p => p.presence && Array.isArray(p.presence.r) && p.presence.r.includes(r));
+    const dots = S.mode === "team" ? own.map(p => `<span class="dot" title="${esc(pname(p))}" style="background:${PAL[(+p.presence.c || 0) % PAL.length]}">${esc(pname(p)[0].toUpperCase())}</span>`).join("") : "";
+    return `<button type="button" role="tab" class="tab" data-act="tab" data-r="${r}" aria-selected="${S.tab === r}">${ROLES[r].s}${dots}</button>`;
+  }).join("");
+}
+function teamHTML() {
+  const h = hashD(curD());
+  const mem = viewers().map(p => { const pr = p.presence || {}, sg = pr.sg === h; return `<span class="mem"><span class="dot" style="background:${PAL[(+pr.c || 0) % PAL.length]}">${esc(pname(p)[0].toUpperCase())}</span>${esc(pname(p))}${p.isMe ? " (you)" : ""} · ${(Array.isArray(pr.r) ? pr.r : []).filter(r => ROLES[r]).map(r => ROLES[r].s).join(", ") || "choosing role"}${sg ? " · ✓ signed" : ""}</span>`; }).join("");
+  const notes = viewers().filter(p => p.presence && typeof p.presence.k === "string" && p.presence.k.trim()).sort((a, b) => (b.presence.kt || 0) - (a.presence.kt || 0)).slice(0, 3).map(p => `<div><b>${esc(pname(p))}:</b> ${esc(String(p.presence.k).slice(0, 140))}</div>`).join("");
+  return [mem, notes];
+}
+
+/* ---------- screens ---------- */
+function renderAll() {
+  if (S.screen === "lobby") renderLobby(); else if (S.screen === "work") { renderWorkSkeleton(); renderPanel(); renderLive(); } else if (S.screen === "fly") renderFly(); else if (S.screen === "result") renderResult();
+}
+function renderLobby() {
+  const D = {}; for (const r of RK) Object.assign(D, DEFAULTS[r], STARTERS.eo[r]); const A = analyze(D);
+  const teamOk = typeof claude !== "undefined";
+  $("#screen").innerHTML = `<div class="lobby"><div class="hero"><h1>Design a space mission. Then fly it.</h1>
+  <p class="lede">Pick a science goal, build the spacecraft, choose an orbit and a rocket, then watch what happens. Every choice trades off against another: more instruments mean more power, more data and more mass. There is rarely one right answer.</p>
+  <div class="fig">${craftSVG(D, A)}</div></div>
+  <div class="card setup"><h2>Start a mission</h2>
+  <div><label for="nm">Your name</label><input id="nm" type="text" maxlength="14" value="${esc(S.name)}" placeholder="Call sign" autocomplete="off"></div>
+  <div class="modes">
+   <button class="mode" type="button" data-act="solo"><b>Fly solo</b><span class="small mute">You hold every role: mission, spacecraft, science and comms.</span></button>
+   <button class="mode" type="button" data-act="team-new" ${teamOk ? "" : "disabled"}><b>Start a team of up to four</b><span class="small mute">Get a room code. Each teammate takes a role and edits the same mission live.</span></button>
+   <div class="mode" style="cursor:default"><b>Join a team</b><span class="small mute">Enter the four-letter code from a teammate.</span><div class="join"><input id="jc" type="text" maxlength="4" placeholder="ABCD" aria-label="Room code" ${teamOk ? "" : "disabled"}><button class="btn" type="button" data-act="team-join" ${teamOk ? "" : "disabled"}>Join</button></div></div>
+  </div>
+  ${teamOk ? "" : `<p class="small mute">Team rooms need the published page opened in claude.ai. Solo play works anywhere.</p>`}
+  <p class="small mute">New here? Open the Handbook for a two-minute tour of the trade-offs.</p></div></div>`;
+  setOrbitGeom(D);
+}
+function nameFromInput() { const v = ($("#nm") ? $("#nm").value : S.name).replace(/[^\p{L}\p{N} _.-]/gu, "").trim().slice(0, 14); S.name = v || "Player"; ls.set("perigee.name", S.name); }
+function renderWorkSkeleton() {
+  if ($("#panel")) return;
+  const team = S.mode === "team";
+  $("#screen").innerHTML = `<div class="strip" id="strip"></div>
+  ${team ? `<section class="card team" aria-label="Team"><div class="top2"><span>Team room</span><span class="code" id="tcode">${esc(S.code)}</span><button class="btn sm" type="button" data-act="copyroom">Copy invite text</button><button class="btn sm" type="button" data-act="leave">Leave team</button>
+   <span class="roletog" role="group" aria-label="Roles you cover">${RK.map(r => `<button type="button" data-act="role" data-r="${r}" aria-pressed="false">${ROLES[r].s}</button>`).join("")}</span></div>
+   <div class="members" id="members"></div><div class="notes" id="notes"></div>
+   <div class="row"><input id="note" type="text" maxlength="140" placeholder="Message to the team, e.g. “I need 100 W more for the radar”" aria-label="Message to the team" style="flex:1;min-width:200px;padding:6px 9px;border:1px solid var(--ink);border-radius:3px;background:var(--pane)"><button class="btn sm" type="button" data-act="note">Send</button></div></section>` : ""}
+  <div id="coach"></div>
+  <div class="work"><aside class="figs"><div class="card" id="craft"></div><div class="card" id="orbit"></div></aside>
+  <section class="main"><div class="meters" id="meters"></div><div class="kpis" id="kpis"></div>
+  <div><div class="tabs" role="tablist" id="tabs" aria-label="Mission areas"></div><div class="card panel" id="panel" role="tabpanel"></div></div>
+  <div class="card review" id="review"></div><div class="card launch" id="launch"></div></section></div>`;
+}
+function renderPanel() { const p = $("#panel"); if (!p) return; const sy = window.scrollY; p.innerHTML = panelHTML(); p._h = null; $$("[data-live]", p).forEach(e => e._h = null); renderLive(); }
+function renderLive() {
+  if (S.screen !== "work" || !$("#panel")) return;
+  const D = curD(), A = getA();
+  const sc = SC[D.sc];
+  setHTML($("#strip"), `<h2>${esc(sc.n)}</h2><span class="meta">${esc(sc.kind)} · ${esc(A.o.n)} · ${esc(A.lv.n)} · ${DF[D.df].n}</span><span class="acts"><button class="btn sm" type="button" data-act="code">Design code</button>${S.mode === "team" ? "" : `<button class="btn sm" type="button" data-act="back-lobby">Menu</button>`}</span>`);
+  setHTML($("#meters"), meters(A, D));
+  setHTML($("#kpis"), `<div class="kpi"><b>${Math.round(A.S0 * 100)}%</b><span>science potential</span></div><div class="kpi"><b>${Math.round(A.relPred * 100)}%</b><span>predicted survival to goal</span></div><div class="kpi"><b>${Math.round((A.lv.rel + A.df.lvb) * 100)}%</b><span>launch reliability</span></div><div class="kpi"><b>${A.advN}</b><span>advanced parts (risk)</span></div>`);
+  setHTML($("#craft"), craftSVG(D, A));
+  const ok = D.orb + D.sc; const ob = $("#orbit"); if (ob._k !== ok || !ob.firstChild) { ob._k = ok; ob.innerHTML = orbitSVG(D, A); setOrbitGeom(D); } else { /* keep animated svg */ }
+  setHTML($("#tabs"), tabsHTML());
+  $$("[data-live]").forEach(e => { const f = LIVE[e.dataset.live]; if (f) setHTML(e, f(A, D)); });
+  setHTML($("#review"), reviewHTML(A)); setHTML($("#launch"), launchHTML(A));
+  const co = $("#coach"); if (co) setHTML(co, S.coach ? `<div class="coach"><b>How it works</b><ol><li>Choose a mission and starter design</li><li>Take turns in each tab to improve the craft</li><li>Clear the design review</li><li>Launch and learn</li></ol><button class="btn sm" type="button" data-act="coachx" style="margin-left:auto">Got it</button></div>` : "");
+  if (S.mode === "team") {
+    const [m, n] = teamHTML(); setHTML($("#members"), m); setHTML($("#notes"), n);
+    $$('[data-act="role"]').forEach(b => b.setAttribute("aria-pressed", S.roles.includes(b.dataset.r)));
+  }
+}
+/* ---------- flight ---------- */
+let flyTimer = null;
+function startFlight(snap, by) {
+  const d = {}; for (const r of RK) Object.assign(d, cleanGroup(r, snap.d || {}));
+  const D = flatten(Object.fromEntries(RK.map(r => [r, { t: 0, v: cleanGroup(r, d) }])));
+  const A = analyze(D), tm = Array.isArray(snap.tm) ? { members: clamp(+snap.tm[0] || 1, 1, 4), signed: clamp(+snap.tm[1] || 0, 0, 4) } : null;
+  const R = simulate(D, A, snap.s | 0 || 1, tm);
+  S.last = { D, A, R, id: snap.t, by: by || null, idx: 0, tm };
+  S.screen = "fly"; clearInterval(flyTimer); renderFly();
+  flyTimer = setInterval(() => { const L = S.last; if (!L) return; if (L.idx < L.R.log.length) { L.idx++; updateFly(); } else { clearInterval(flyTimer); setTimeout(() => { if (S.screen === "fly") { S.screen = "result"; renderResult(); } }, 900); } }, 750);
+}
+function renderFly() {
+  const L = S.last; if (!L) return;
+  $("#screen").innerHTML = `<div class="strip"><h2>Flight in progress</h2><span class="meta">${esc(L.A.sc.n)}${L.by ? " · launched by " + esc(L.by) : ""}</span><span class="acts"><button class="btn sm" type="button" data-act="skip">Skip to result</button></span></div>
+  <div class="fly"><div class="card" id="flyorb">${orbitSVG(L.D, L.A)}</div><div class="card res"><div class="phases" id="phases"></div><div><div class="row" style="justify-content:space-between"><b>Science delivered</b><span class="mono" id="sciv">0%</span></div><div class="bar" aria-hidden="true"><i id="scib" style="width:0%;background:var(--acc)"></i></div></div><ul class="log" id="log" aria-live="polite"></ul></div></div>`;
+  setOrbitGeom(L.D); updateFly();
+}
+function updateFly() {
+  const L = S.last; if (!L || !$("#log")) return;
+  const items = L.R.log.slice(0, L.idx), cur = items[items.length - 1] || { ph: "Build", sci: 0 };
+  const PH = ["Build", "Launch", "Cruise", "Commission", "Operate"], ci = PH.indexOf(cur.ph);
+  $("#phases").innerHTML = PH.map((p, i) => `<span class="phase ${i === ci ? "on" : i < ci ? "done" : ""}">${p}</span>`).join("");
+  $("#log").innerHTML = items.slice().reverse().map(l => `<li class="${l.kind}"><span class="k">${l.m ? "mo " + l.m : "start"}</span>${esc(l.text)}</li>`).join("");
+  $("#sciv").textContent = Math.round(cur.sci * 100) + "%"; $("#scib").style.width = Math.round(cur.sci * 100) + "%";
+}
+function renderResult() {
+  const { D, A, R, tm } = S.last, s = R.scores, sbx = A.sandbox;
+  const bars = [["Science returned", s.sci, 40], ["Survival", s.surv, 20], ["Resource efficiency", s.eff, 15], ["Requirements met", s.req, 15], [S.mode === "team" ? "Teamwork & integration" : "Design integration", s.col, 10]];
+  const less = lessons(D, A, R);
+  if (!sbx && !S.last.logged) { S.last.logged = true; const all = ls.get("perigee.lb", []); all.push({ n: S.last.by || S.name || "Player", sc: D.sc, score: s.total, g: R.grade, team: !!(tm && tm.members > 1), t: Date.now() }); ls.set("perigee.lb", all.sort((a, b) => b.score - a.score).slice(0, 40)); }
+  const lb2 = ls.get("perigee.lb", []).filter(x => x.sc === D.sc).sort((a, b) => b.score - a.score).slice(0, 5);
+  $("#screen").innerHTML = `<div class="res"><div class="strip"><h2>${esc(A.sc.n)}: mission report</h2><span class="meta">${esc(A.o.n)} · ${esc(A.lv.n)}${S.last.by ? " · launched by " + esc(S.last.by) : ""}</span></div>
+  <div class="card grade"><div class="big">${s.total}</div><div><h1>${R.grade}</h1><p class="mute">${R.completed ? `The spacecraft completed all ${R.T} months of its primary mission.` : R.fail ? `${esc(R.fail.cause)}${R.launchOk ? ` after ${R.monthsOps} of ${R.T} planned months.` : "."}` : ""} ${sbx ? "Sandbox flights are not ranked." : ""}</p></div></div>
+  <div class="cols"><div class="card"><h3>Score</h3>${bars.map(([n, v, m]) => `<div class="sc"><span>${n}</span><div class="bar" aria-hidden="true"><i style="width:${v / m * 100}%"></i></div><span class="mono">${v.toFixed(1)}/${m}</span></div>`).join("")}
+  <h3 style="margin-top:14px">Requirements</h3><ul class="reqs">${R.reqs.map(([n, y]) => `<li><span class="${y ? "y" : "n"}">${y ? "✓ Met" : "✗ Missed"}</span><span>${esc(n)}</span></li>`).join("")}</ul></div>
+  <div class="card"><h3>What to learn from this flight</h3><div class="less" style="margin-top:8px">${less.map(x => `<div class="it"><b>${esc(x.title)}</b><span class="small">${esc(x.body)}</span></div>`).join("")}</div></div></div>
+  <div class="cols"><div class="card"><h3>Flight log</h3><ul class="log" style="margin-top:8px">${R.log.map(l => `<li class="${l.kind}"><span class="k">${l.m ? "mo " + l.m : "start"}</span>${esc(l.text)}</li>`).join("")}</ul></div>
+  <div class="card"><h3>Rankings for this mission (this browser)</h3>${sbx ? `<p class="small mute" style="margin-top:6px">Sandbox flights are not ranked.</p>` : `<table class="lb" style="margin-top:6px"><thead><tr><th>#</th><th>Crew</th><th>Score</th><th>Result</th></tr></thead><tbody>${lb2.map((x, i) => `<tr><td>${i + 1}</td><td>${esc(x.n)}${x.team ? " (team)" : ""}</td><td class="mono">${x.score}</td><td>${esc(x.g)}</td></tr>`).join("")}</tbody></table>`}
+  <p class="small mute" style="margin-top:10px">Rankings are kept only in this browser.</p></div></div>
+  <div class="row"><button class="btn pri" type="button" data-act="back">Improve the design</button><button class="btn" type="button" data-act="again">Fly again with new dice</button><button class="btn" type="button" data-act="download">Download report</button><button class="btn" type="button" data-act="savelib2">Save this design</button></div></div>`;
+  setOrbitGeom(D);
+}
+/* ---------- modals ---------- */
+function modal(html) { const m = $("#modal"); m.innerHTML = `<div class="sheet">${html}</div>`; m.classList.add("on"); const b = $("[data-act=close]", m); if (b) b.focus(); }
+function closeModal() { $("#modal").classList.remove("on"); $("#modal").innerHTML = ""; }
+function handbook() {
+  const H = [["Orbit altitude", "Low orbits give sharper pictures and cost less to reach, but air drag pulls the craft down and a ground station sees it for only minutes. High orbits see more at once but need more energy to reach and signals get weaker."], ["Eclipse and batteries", "In low orbit the craft slips into Earth’s shadow every 90 minutes. Solar arrays stop, so batteries must carry the load, and charging that often wears them out."], ["Payload capacity", "A rocket delivers only so many kilograms to each orbit. Fuel is mass, and carrying fuel needs more fuel: the rocket equation. This is why every kilogram matters."], ["Power", "Watts come from array area × cell efficiency × sunlight. Every instrument and computer draws power, so adding one means bigger arrays, which weigh more and cost more."], ["Data rate and contact time", "Downlink per day = antenna rate × distance loss × minutes in contact. A craft that makes more data than it can send wastes the difference."], ["Radiation", "Charged particles age solar cells and crash computers. Medium Earth orbit sits inside the radiation belts. Tougher chips and shielding buy lifetime."], ["Pointing", "A dish or telescope has to aim precisely. Steadier pointing costs mass, power and money, but without it instruments blur and links slow down."], ["Redundancy", "Spare parts cut failures but cost mass and money. Far from home, nobody can fix a failure, so careful teams carry more backups."], ["Margins", "Real teams keep 10–30% spare on mass, power and budget, because designs grow. The score rewards sensible reserves, and penalizes both too little and too much."]];
+  modal(`<header><h2>Mission handbook</h2><button class="btn sm" type="button" data-act="close">Close</button></header><p class="mute">Nine ideas that explain almost every result in this game. Each tab in the workspace has a short “why it matters” line under every choice.</p><div class="hb">${H.map(([t, b]) => `<div><b>${t}</b><span class="small">${b}</span></div>`).join("")}</div><p class="small mute">Scoring: Science 40 · Survival 20 · Resource efficiency 15 · Requirements 15 · Integration and teamwork 10.</p>`);
+}
+function library() {
+  const lib = ls.get("perigee.lib", []), cur = curD(), cols = [["Current design", cur, null], ...lib.map(x => [x.name, decode(x.code), x])].filter(c => c[1]);
+  const rows = [["Mission", A => A.sc.n], ["Orbit", A => A.o.n], ["Rocket", A => A.lv.n], ["Instruments", A => A.insts.length], ["Cost ($M)", A => fmt(A.cost)], ["Launch mass (kg)", A => fmt(A.launchMass)], ["Estimated life (yr)", A => (A.lifeM / 12).toFixed(1)], ["Science potential", A => Math.round(A.S0 * 100) + "%"], ["Data returned", A => Math.round(A.dataRet * 100) + "%"], ["Predicted survival", A => Math.round(A.relPred * 100) + "%"], ["Blocking issues", A => A.flags.filter(f => f.sev === "block").length]];
+  const An = cols.map(c => analyze(c[1]));
+  modal(`<header><h2>Saved designs</h2><button class="btn sm" type="button" data-act="close">Close</button></header>
+  <p class="small mute">Save designs in this browser and compare them side by side. Share one by copying its design code.</p>
+  <table class="tbl"><thead><tr><th></th>${cols.map(c => `<th>${esc(c[0])}</th>`).join("")}</tr></thead><tbody>${rows.map(([n, f]) => `<tr><th>${n}</th>${An.map(A => `<td class="mono">${esc(f(A))}</td>`).join("")}</tr>`).join("")}<tr><th>Best score</th>${cols.map(c => `<td class="mono">${c[2] && c[2].score != null ? c[2].score : "—"}</td>`).join("")}</tr><tr><th></th>${cols.map(c => `<td>${c[2] ? `<button class="btn sm" type="button" data-act="loadlib" data-id="${c[2].id}">Load</button> <button class="btn sm" type="button" data-act="dellib" data-id="${c[2].id}">Delete</button>` : ""}</td>`).join("")}</tr></tbody></table>
+  <div class="row"><button class="btn" type="button" data-act="savelib">Save current design</button></div>
+  <div><label for="dc"><b>Load from a design code</b></label><textarea id="dc" placeholder="Paste a code that starts with PG1."></textarea><div class="row" style="margin-top:6px"><button class="btn" type="button" data-act="loadcode">Load code</button></div></div>`);
+}
+function codeModal() {
+  const c = encode(curD());
+  modal(`<header><h2>Design code</h2><button class="btn sm" type="button" data-act="close">Close</button></header><p class="small mute">Send this code to anyone. They can paste it under “Saved designs” to load your exact design.</p><textarea id="cc" readonly>${esc(c)}</textarea><div class="row"><button class="btn" type="button" data-act="copycc">Copy</button></div>`);
+  $("#cc").addEventListener("focus", e => e.target.select());
+}
+function saveLib(score) {
+  const D = curD(), lib = ls.get("perigee.lib", []);
+  if (lib.length >= 6) { toast("You can keep six saved designs. Delete one first."); return; }
+  lib.push({ id: String(Date.now()), name: `${SC[D.sc].n} #${lib.length + 1}`, code: encode(D), score: score == null ? null : score });
+  toast(ls.set("perigee.lib", lib) ? "Design saved in this browser." : "This browser blocked saving.");
+}
+/* ---------- actions ---------- */
+function act(a, b) {
+  switch (a) {
+    case "solo": nameFromInput(); S.mode = "solo"; S.roles = RK.slice(); G = freshG(); S.screen = "work"; S.tab = "lead"; renderAll(); break;
+    case "team-new": nameFromInput(); enterTeam(newCode()); break;
+    case "team-join": { nameFromInput(); const c = ($("#jc").value || "").toUpperCase().replace(/[^A-Z0-9]/g, ""); if (c.length !== 4) { toast("Enter the four-letter room code."); break; } enterTeam(c); break; }
+    case "leave": leaveTeam(); break;
+    case "back-lobby": S.screen = "lobby"; renderAll(); break;
+    case "tab": S.tab = b.dataset.r; renderPanel(); break;
+    case "role": { const r = b.dataset.r, i = S.roles.indexOf(r); if (i >= 0) S.roles.splice(i, 1); else S.roles.push(r); S.rolesSet = true; if (!S.roles.includes(S.tab) && S.roles.length) S.tab = S.roles[0]; pub(); renderPanel(); break; }
+    case "inst": toggleInst(b.dataset.id); break;
+    case "starter": if (!can("lead")) { toast("The Mission Lead sets the baseline."); break; } loadStarter(); break;
+    case "sign": { const h = hashD(curD()); S.signed = S.signed === h ? "" : h; pub(); renderLive(); break; }
+    case "launch": { const A = getA(); if (A.blocked) break; const D = curD(), tm = S.mode === "team" ? { members: Math.max(1, viewers().length), signed: viewers().filter(p => p.presence && p.presence.sg === hashD(D)).length } : null; const snap = { t: Date.now(), s: G.x.v.sd, d: D, tm: tm ? [tm.members, tm.signed] : null }; if (S.room) { S.myL = snap; pub(); } startFlight(snap, S.mode === "team" ? S.name : null); break; }
+    case "reroll": G.x = { t: Date.now(), v: { sd: 1 + Math.floor(Math.random() * 99999) } }; pub(); renderLive(); toast("New dice rolled."); break;
+    case "skip": clearInterval(flyTimer); S.screen = "result"; renderResult(); break;
+    case "back": S.screen = "work"; renderAll(); break;
+    case "again": G.x = { t: Date.now(), v: { sd: 1 + Math.floor(Math.random() * 99999) } }; pub(); S.screen = "work"; renderAll(); $('[data-act="launch"]') && act("launch"); break;
+    case "download": downloadReport(); break;
+    case "handbook": handbook(); break;
+    case "library": library(); break;
+    case "close": closeModal(); break;
+    case "code": codeModal(); break;
+    case "copycc": copyText($("#cc").value); break;
+    case "copyroom": copyText(`Join my Perigee mission team: open this page, choose “Join a team” and enter room code ${S.code}.`); break;
+    case "savelib": saveLib(null); if ($("#modal").classList.contains("on")) library(); break;
+    case "savelib2": saveLib(S.last.R.scores.total); break;
+    case "loadlib": { const x = ls.get("perigee.lib", []).find(i => i.id === b.dataset.id); const D = x && decode(x.code); if (D) { loadDesign(D); closeModal(); } break; }
+    case "dellib": ls.set("perigee.lib", ls.get("perigee.lib", []).filter(i => i.id !== b.dataset.id)); library(); break;
+    case "loadcode": { const D = decode($("#dc").value); if (!D) { toast("That code didn’t load. Check it starts with PG1."); break; } loadDesign(D); closeModal(); break; }
+    case "coachx": S.coach = false; renderLive(); break;
+    case "note": { const i = $("#note"); S.note = i.value.slice(0, 140); S.noteT = Date.now(); i.value = ""; pub(); renderLive(); break; }
+  }
+}
+function copyText(t) { try { navigator.clipboard.writeText(t).then(() => toast("Copied."), () => toast("Select the text and copy it manually.")); } catch (e) { toast("Select the text and copy it manually."); } }
+async function downloadReport() {
+  const { D, A, R } = S.last, text = reportText(D, A, R, S.mode === "team" ? viewers().map(pname).join(", ") : (S.name || "Solo crew"));
+  try { const dl = typeof claude !== "undefined" ? await claude.use("downloads") : null; if (!dl) throw 0; await dl.save({ filename: "perigee-mission-report.md", data: text }); toast("Report saved."); }
+  catch (e) { modal(`<header><h2>Mission report</h2><button class="btn sm" type="button" data-act="close">Close</button></header><textarea id="cc" readonly style="min-height:300px">${esc(text)}</textarea><div class="row"><button class="btn" type="button" data-act="copycc">Copy</button></div>`); }
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act],button[data-k]"); if (!b || b.disabled) return;
+  if (b.dataset.act) act(b.dataset.act, b); else setVal(b.dataset.k, b.dataset.v);
+});
+document.addEventListener("input", e => { const t = e.target; if (t.type === "range" && t.dataset.k) { const v = +t.value; setVal(t.dataset.k, v, true); const o = $(`[data-out="${t.dataset.k}"]`); if (o) o.textContent = outText(t.dataset.k, v); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); if (e.key === "Enter" && e.target.id === "note") act("note"); if (e.key === "Enter" && e.target.id === "jc") act("team-join"); });
+$("#modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+requestAnimationFrame(satLoop);
+renderAll();
+</script>
+</body>
+</html>
